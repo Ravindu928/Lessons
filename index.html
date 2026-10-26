@@ -358,7 +358,6 @@ use.vi{color:var(--violet)}
     <div class="warn"><p><strong>⚠ සැලකිය යුතුයි:</strong> Intro slide 1 සහ VCO slides 3–4 වල input එක "DC Signal / DC Voltage" කියලා තියෙනවා. ඒක signal එකක් නෙවෙයි, <b>DC power supply</b> එකක්. Exam එකේ "DC supply එකේ energy එක AC signal එකක් බවට හරවනවා" කියලා ලියන්න.</p></div>
 
     <h3>Block diagram සහ gain සූත්‍රය</h3>
-    <p>Oscillator = <span class="t">amplifier (A)</span> <span class="g">(signal එක ලොකු කරන කොටස)</span> + <span class="t">feedback network (β)</span> <span class="g">(output එකෙන් කොටසක් ආපහු යවන කොටස)</span> + <span class="t">Σ</span> <span class="g">(එකතු කරන තැන)</span>. Σ එකේ ලකුණු දෙකම + නිසා මේක <span class="t">positive feedback</span> <span class="g">(ආපහු එන කොටස input එකට එකතු වෙනවා)</span>. Mic එක speaker එක ළඟට ගියාම එන "කීඊඊ" සද්දය හරියටම මේකයි.</p>
     <figure class="fig">
       <svg viewBox="0 0 560 260" role="img" aria-label="Feedback loop: Vin, Σ, A, Vout, β">
         <use href="#loop" x="0" y="0" width="560" height="260"/>
@@ -368,6 +367,7 @@ use.vi{color:var(--violet)}
       </svg>
       <figcaption>Intro slide 2, LC slides 1, 6: එකම block diagram එක. β කොටස RC නම් RC oscillator, LC නම් LC oscillator.</figcaption>
     </figure>
+    <p>Oscillator = <span class="t">amplifier (A)</span> <span class="g">(signal එක ලොකු කරන කොටස)</span> + <span class="t">feedback network (β)</span> <span class="g">(output එකෙන් කොටසක් ආපහු යවන කොටස)</span> + <span class="t">Σ</span> <span class="g">(එකතු කරන තැන)</span>. Σ එකේ ලකුණු දෙකම + නිසා මේක <span class="t">positive feedback</span> <span class="g">(ආපහු එන කොටස input එකට එකතු වෙනවා)</span>. Mic එක speaker එක ළඟට ගියාම එන "කීඊඊ" සද්දය හරියටම මේකයි.</p>
     <ol>
       <li><div class="eq">Vf = β·Vout</div></li>
       <li><div class="eq">Vout = A(Vin + Vf) = A·Vin + Aβ·Vout</div></li>
@@ -459,6 +459,16 @@ use.vi{color:var(--violet)}
     <p>Inverting op-amp (180°) + CR stages 3ක network එක (180°) = 360°.</p>
 
     <h3>එක CR stage එකක් (slide 3)</h3>
+    <figure class="fig">
+      <svg viewBox="0 0 560 170" role="img" aria-label="Single CR stage">
+        <path d="M40 50H120M160 50H340M250 50V60M250 120V140" class="s-main"/>
+        <use href="#cH" x="120" y="35" width="40" height="30"/><use href="#rV" x="240" y="60" width="20" height="60"/><use href="#gnd" x="238" y="140" width="24" height="16"/>
+        <circle cx="40" cy="50" r="4" class="s-main" style="fill:none"/><circle cx="340" cy="50" r="4" class="s-main" style="fill:none"/><circle cx="250" cy="50" r="3.5" fill="currentColor"/>
+        <text x="20" y="36" class="tx-a">Vin</text><text x="130" y="28" class="tx-m">C</text><text x="268" y="96" class="tx-m">R</text><text x="330" y="36" class="tx-c">Vo</text>
+        <text x="290" y="104" class="tx-s">Vo, Vin ට වඩා φ ඉස්සරහින් (lead)</text>
+      </svg>
+      <figcaption>Slide 3: series C, ground එකට R. Output එක R හරහා.</figcaption>
+    </figure>
     <p>Series C, ground එකට R. Output එක R හරහා. මේක <span class="t">voltage divider</span> <span class="g">(voltage එක කොටස් දෙකකට බෙදන)</span> එකක්:</p>
     <div class="eq">Vo/Vin = R/(R − jXc) = 1/(1 − j/ωCR) &nbsp;→&nbsp; φ = tan⁻¹(Xc/R) (lead), &nbsp;|Vo/Vin| = cos φ</div>
     <p>φ කවදාවත් 90° ට ළඟා වෙන්නේ නෑ (90° = f → 0, output 0). ඉතින් stages 2ක් මදි, <b>අවම stages 3</b> (slides 4–5).</p>
@@ -498,7 +508,6 @@ use.vi{color:var(--violet)}
     </figure>
 
     <h3>Derivation: √6 සහ 29 (slides 10–21)</h3>
-    <p>Output එකේ සිට ආපස්සට, Ohm + <span class="t">KCL</span> <span class="g">(node එකකට එන current = යන currents එකතුව)</span>. කෙටි කරන්න <span class="m">a = 1/(jωCR)</span>:</p>
     <figure class="fig">
       <svg viewBox="0 0 540 200" role="img" aria-label="Ladder currents and node voltages">
         <use href="#ladder" x="10" y="10" width="520" height="180"/>
@@ -507,6 +516,7 @@ use.vi{color:var(--violet)}
         <text x="146" y="30" class="tx-c">V1</text><text x="296" y="30" class="tx-c">V2</text><text x="448" y="30" class="tx-c">Vo</text>
       </svg>
     </figure>
+    <p>Output එකේ සිට ආපස්සට, Ohm + <span class="t">KCL</span> <span class="g">(node එකකට එන current = යන currents එකතුව)</span>. කෙටි කරන්න <span class="m">a = 1/(jωCR)</span>:</p>
     <ol>
       <li><span class="m">I3 = Vo/R</span> → <div class="eq">V2 = Vo + I3/(jωC) = Vo(1 + a)</div></li>
       <li>KCL at V2: <div class="eq">I2 = V2/R + I3 = (Vo/R)(2 + a)</div></li>
@@ -555,7 +565,6 @@ use.vi{color:var(--violet)}
   <section class="topic col" id="wien">
     <div class="sn">03 · RC Oscillators 1, slides 20–33</div>
     <h2>Wien Bridge Oscillator</h2>
-    <p><span class="t">Non-inverting amplifier</span> <span class="g">(phase 0°)</span> + <span class="t">lead-lag network</span> (0°). Bridge එකේ වම් arms දෙක (R1C1 series, R2∥C2) frequency එක දෙනවා; දකුණු arms (R3, R4) gain එක දෙනවා.</p>
     <figure class="fig">
       <svg viewBox="0 0 590 340" role="img" aria-label="Wien bridge oscillator op-amp circuit">
         <path d="M300 60L300 160L390 110Z" class="s-main" style="fill:var(--panel2)"/>
@@ -576,8 +585,16 @@ use.vi{color:var(--violet)}
       </svg>
       <figcaption>Slide 22 ආකාරය. Slide 20 එකේ මේකම bridge (diamond) එකක් විදියට.</figcaption>
     </figure>
+    <p><span class="t">Non-inverting amplifier</span> <span class="g">(phase 0°)</span> + <span class="t">lead-lag network</span> (0°). Bridge එකේ වම් arms දෙක (R1C1 series, R2∥C2) frequency එක දෙනවා; දකුණු arms (R3, R4) gain එක දෙනවා.</p>
 
     <h3>Lead-lag network (slides 23–26)</h3>
+    <figure class="fig">
+      <svg viewBox="0 0 520 230" role="img" aria-label="Lead-lag network"><use href="#leadlag" class="cy" x="0" y="0" width="520" height="230"/>
+        <text x="10" y="30" class="tx-a">Vin</text><text x="78" y="26" class="tx-m">C1</text><text x="146" y="30" class="tx-m">R1</text><text x="212" y="120" class="tx-m">C2</text><text x="358" y="120" class="tx-m">R2</text><text x="452" y="30" class="tx-c">Vout</text>
+        <text x="60" y="94" class="tx-s">series R1C1 (HPF කොටස)</text><text x="515" y="182" text-anchor="end" class="tx-s">parallel R2C2 (LPF කොටස)</text>
+      </svg>
+      <figcaption>Slides 23–24: lead-lag network = series R1C1 + parallel R2C2.</figcaption>
+    </figure>
     <p>අඩු f: C1 open → Vout ≈ 0, phase +90° (lead, <span class="t">HPF</span> කොටස). වැඩි f: C2 short → Vout ≈ 0, phase −90° (lag, <span class="t">LPF</span> කොටස). මැද <span class="t">fr</span> එකේ output උපරිම, phase 0° → <span class="t">band-pass filter</span>.</p>
     <div class="widget" id="w-wien">
       <p class="wt">Interactive · Lead-lag frequency response</p>
@@ -648,9 +665,6 @@ use.vi{color:var(--violet)}
     <p>Block diagram එක §1 එකමයි, β කොටස <span class="t">LC circuit</span> එකක් (slide 1). RC වලට වඩා වැඩි frequencies (kHz – සිය ගණන් MHz) වලට ගැලපෙනවා.</p>
 
     <h3>LC tank circuit (slides 2–3)</h3>
-    <p>C එක charge කරලා (slide 2 දකුණ: V source එකකින්) L එකට සම්බන්ධ කළාම, C discharge වෙලා current එක L හරහා යනවා. Energy එක C එකේ <span class="t">electric field</span> එකේ සිට L එකේ <span class="t">magnetic field</span> එකට, ආපහු C එකට, දිගටම මාරු වෙනවා. ඒකෙන් sine wave එකක්:</p>
-    <div class="eq" style="color:var(--amber)">f = 1 / (2π√(LC))</div>
-    <p>ඇත්ත L, C වල පුංචි resistance එකක් තියෙන නිසා හැම වටයකම energy ටිකක් රස්නය විදියට නැති වෙනවා → wave එක <b>මැකිලා යනවා</b> (slide 3 දකුණ). ඒ නැති වෙන energy එක ආපහු දෙන්න තමයි amplifier එක.</p>
     <figure class="fig">
       <svg viewBox="0 0 560 170" role="img" aria-label="LC tank and damped oscillation">
         <path d="M60 30V50M60 90V140H140V110M140 50V30H60M100 20V30M100 140V150" class="s-main"/>
@@ -662,15 +676,11 @@ use.vi{color:var(--violet)}
         <text x="552" y="160" text-anchor="end" class="tx-s">ඇත්ත tank: losses නිසා damped</text>
       </svg>
     </figure>
+    <p>C එක charge කරලා (slide 2 දකුණ: V source එකකින්) L එකට සම්බන්ධ කළාම, C discharge වෙලා current එක L හරහා යනවා. Energy එක C එකේ <span class="t">electric field</span> එකේ සිට L එකේ <span class="t">magnetic field</span> එකට, ආපහු C එකට, දිගටම මාරු වෙනවා. ඒකෙන් sine wave එකක්:</p>
+    <div class="eq" style="color:var(--amber)">f = 1 / (2π√(LC))</div>
+    <p>ඇත්ත L, C වල පුංචි resistance එකක් තියෙන නිසා හැම වටයකම energy ටිකක් රස්නය විදියට නැති වෙනවා → wave එක <b>මැකිලා යනවා</b> (slide 3 දකුණ). ඒ නැති වෙන energy එක ආපහු දෙන්න තමයි amplifier එක.</p>
 
     <h3>පොදු ආකාරය: Z1, Z2, Z3 (slides 4–5)</h3>
-    <p>Inverting amplifier (180°) + Z1, Z2, Z3 network (180°). Z1–Z2 මැද point එක ground. Network එක හඳුනාගන්න:</p>
-    <div class="tbl"><table>
-      <tr><th>Oscillator</th><th>Z1, Z2</th><th>Z3</th><th>Frequency</th></tr>
-      <tr><td><b>Colpitts</b></td><td>Capacitors C1, C2</td><td>Inductor L</td><td class="mono">1/(2π√(L·C)), C = C1C2/(C1+C2)</td></tr>
-      <tr><td><b>Hartley</b></td><td>Inductors L1, L2</td><td>Capacitor C</td><td class="mono">1/(2π√((L1+L2)C)) *</td></tr>
-    </table></div>
-    <p class="cap">* Hartley සූත්‍රය slides වල නෑ (lecture එකේ නැති අමතරයක්). Colpitts මතක තියාගන්න කෙටි ක්‍රමයක්: <b>C</b>olpitts = <b>C</b>apacitors දෙකයි.</p>
     <figure class="fig">
       <svg viewBox="0 0 520 320" role="img" aria-label="Op-amp Colpitts oscillator: R1, Rf, C1, C2, L">
         <path d="M220 60L220 160L310 110Z" class="s-main" style="fill:var(--panel2)"/>
@@ -690,6 +700,13 @@ use.vi{color:var(--violet)}
       </svg>
       <figcaption>Slides 4–5, 9: Vout → Z3 (L) → Vf node → Z1 (C1) → ground. Vf එක R1 හරහා − input එකට.</figcaption>
     </figure>
+    <p>Inverting amplifier (180°) + Z1, Z2, Z3 network (180°). Z1–Z2 මැද point එක ground. Network එක හඳුනාගන්න:</p>
+    <div class="tbl"><table>
+      <tr><th>Oscillator</th><th>Z1, Z2</th><th>Z3</th><th>Frequency</th></tr>
+      <tr><td><b>Colpitts</b></td><td>Capacitors C1, C2</td><td>Inductor L</td><td class="mono">1/(2π√(L·C)), C = C1C2/(C1+C2)</td></tr>
+      <tr><td><b>Hartley</b></td><td>Inductors L1, L2</td><td>Capacitor C</td><td class="mono">1/(2π√((L1+L2)C)) *</td></tr>
+    </table></div>
+    <p class="cap">* Hartley සූත්‍රය slides වල නෑ (lecture එකේ නැති අමතරයක්). Colpitts මතක තියාගන්න කෙටි ක්‍රමයක්: <b>C</b>olpitts = <b>C</b>apacitors දෙකයි.</p>
 
     <h3>Transistor Colpitts (slide 7)</h3>
     <figure class="fig">
@@ -774,21 +791,6 @@ use.vi{color:var(--violet)}
     </ul>
 
     <h3>Inverting Schmitt trigger (slides 3–5)</h3>
-    <p>Vin → − input. R1 (ground) සහ R2 (Vout ට) + input එකට positive feedback දෙනවා. V+ node එකේ KCL:</p>
-    <ol>
-      <li><div class="eq">(V⁺ − 0)/R1 + (V⁺ − Vout)/R2 = 0 → V⁺ = R1/(R1+R2) · Vout</div></li>
-      <li>Vout = VH නම්: <span class="m">V⁺ = R1/(R1+R2)·VH</span>. Vin මේක පැන්නම → Vout = VL. ඉතින් <div class="eq" style="color:var(--amber)">VUT = R1/(R1+R2) · VH</div></li>
-      <li>Vout = VL නම්: Vin මේකට පහළට ගියාම → VH: <div class="eq" style="color:var(--amber)">VLT = R1/(R1+R2) · VL</div></li>
-      <li><div class="eq">Hysteresis = R1/(R1+R2) · (VH − VL)</div></li>
-    </ol>
-    <h3>Non-inverting Schmitt trigger (slide 6)</h3>
-    <p>Vin → R1 → + input, R2 feedback, − input ground. Superposition/KCL:</p>
-    <ol>
-      <li><div class="eq">V⁺ = R2/(R1+R2) · Vin + R1/(R1+R2) · Vout</div></li>
-      <li>V⁺ &gt; 0 → VH, V⁺ &lt; 0 → VL. Vout = VL තියෙද්දී V⁺ = 0 වෙන තැන: <div class="eq" style="color:var(--amber)">VUT = −(R1/R2) · VL</div></li>
-      <li>Vout = VH තියෙද්දී: <div class="eq" style="color:var(--amber)">VLT = −(R1/R2) · VH</div></li>
-      <li><div class="eq">Hysteresis = (R1/R2)(VH − VL)</div></li>
-    </ol>
     <figure class="fig">
       <svg viewBox="0 0 620 400" role="img" aria-label="Inverting and non-inverting Schmitt circuits and their hysteresis loops">
         <text x="10" y="20" class="tx-a">Inverting</text>
@@ -819,6 +821,21 @@ use.vi{color:var(--violet)}
       </svg>
       <figcaption>Slides 3–6: circuits දෙක සහ transfer characteristics (hysteresis loops). Solid = Vin වැඩි වෙද්දී, dashed = අඩු වෙද්දී.</figcaption>
     </figure>
+    <p>Vin → − input. R1 (ground) සහ R2 (Vout ට) + input එකට positive feedback දෙනවා. V+ node එකේ KCL:</p>
+    <ol>
+      <li><div class="eq">(V⁺ − 0)/R1 + (V⁺ − Vout)/R2 = 0 → V⁺ = R1/(R1+R2) · Vout</div></li>
+      <li>Vout = VH නම්: <span class="m">V⁺ = R1/(R1+R2)·VH</span>. Vin මේක පැන්නම → Vout = VL. ඉතින් <div class="eq" style="color:var(--amber)">VUT = R1/(R1+R2) · VH</div></li>
+      <li>Vout = VL නම්: Vin මේකට පහළට ගියාම → VH: <div class="eq" style="color:var(--amber)">VLT = R1/(R1+R2) · VL</div></li>
+      <li><div class="eq">Hysteresis = R1/(R1+R2) · (VH − VL)</div></li>
+    </ol>
+    <h3>Non-inverting Schmitt trigger (slide 6)</h3>
+    <p>Vin → R1 → + input, R2 feedback, − input ground. Superposition/KCL:</p>
+    <ol>
+      <li><div class="eq">V⁺ = R2/(R1+R2) · Vin + R1/(R1+R2) · Vout</div></li>
+      <li>V⁺ &gt; 0 → VH, V⁺ &lt; 0 → VL. Vout = VL තියෙද්දී V⁺ = 0 වෙන තැන: <div class="eq" style="color:var(--amber)">VUT = −(R1/R2) · VL</div></li>
+      <li>Vout = VH තියෙද්දී: <div class="eq" style="color:var(--amber)">VLT = −(R1/R2) · VH</div></li>
+      <li><div class="eq">Hysteresis = (R1/R2)(VH − VL)</div></li>
+    </ol>
     <div class="widget" id="w-sch">
       <p class="wt">Interactive · Noisy input: comparator vs Schmitt trigger (VH = +12 V, VL = −12 V)</p>
       <div class="seg" style="margin-bottom:10px"><label><input type="radio" name="schM" id="schInv" checked> Inverting</label><label><input type="radio" name="schM" id="schNon"> Non-inverting</label></div>
@@ -918,7 +935,6 @@ use.vi{color:var(--violet)}
       <tr><td class="mono">1</td><td class="mono">0</td><td class="mono">1</td><td>Set → output High</td></tr>
       <tr><td class="mono">1</td><td class="mono">1</td><td class="mono">X</td><td>Invalid</td></tr>
     </table></div>
-    <p><b>Discharge transistor</b> (MV slide 14): Q̄ = 1 → transistor ON → closed switch, pin 7 හරහා C එක ground එකට discharge. Q̄ = 0 → OFF → open switch, C charge වෙන්න පුළුවන්.</p>
     <figure class="fig">
       <svg viewBox="0 0 560 150" role="img" aria-label="Discharge transistor as a switch">
         <text x="10" y="18" class="tx-a">Q̄ = 1 → transistor ON</text>
@@ -937,6 +953,7 @@ use.vi{color:var(--violet)}
         <text x="300" y="142" class="tx-s">open: C charge → High</text>
       </svg>
     </figure>
+    <p><b>Discharge transistor</b> (MV slide 14): Q̄ = 1 → transistor ON → closed switch, pin 7 හරහා C එක ground එකට discharge. Q̄ = 0 → OFF → open switch, C charge වෙන්න පුළුවන්.</p>
     <div class="warn">
       <p><strong>⚠ සැලකිය යුතුයි:</strong> MV slide 13 truth table එකේ S = R = 0 පේළියේ "0/1 → 0/1" කියලා තියෙන්නේ <b>Qn+1 = Qn</b> (කලින් තිබ්බ එකමයි) කියන එක. "0 හෝ 1 අහඹු ලෙස" නෙවෙයි.</p>
       <p><strong>⚠ සැලකිය යුතුයි:</strong> Block diagram එකේ output stage එකට යන්නේ Q̄. Output stage එක inverting නිසා <b>pin 3 = Q</b>. Lecture එක "Q = 1 → Output High" කියන්නේ ඒ නිසා. Resistors තුන 5 kΩ බැගින් (IC එකේ නම "555" එන්නේ ඒකෙන්) — මේක slides වල නෑ, අමතරයි.</p>
@@ -1166,7 +1183,6 @@ use.vi{color:var(--violet)}
     <p><b>Applications</b> (slide 6): Phase-locked loop (PLL), modulation/demodulation (FM), frequency synthesizers, function generators. <b>වර්ග</b> (slide 7): harmonic (RC, LC, crystal) සහ relaxation (§1 tree එක).</p>
 
     <h3>LC VCO: varactor diode (slides 8–10)</h3>
-    <p>Tank එකේ C1, C2 වෙනුවට back-to-back <span class="t">varactor diodes</span> <span class="g">(reverse bias කළාම capacitor එකක් වගේ හැසිරෙන diode; reverse voltage වැඩි වෙද්දී capacitance අඩු වෙනවා)</span> D1, D2. V<sub>control</sub> මැදට. Voltage ↑ → C ↓ → f ↑ (f ∝ 1/√LC).</p>
     <figure class="fig">
       <svg viewBox="0 0 560 210" role="img" aria-label="Varactor tank and C vs reverse voltage curve">
         <path d="M40 30H140V45M40 30V70M40 130V180H140V165M140 105V115M140 105H200" class="s-main"/>
@@ -1180,6 +1196,7 @@ use.vi{color:var(--violet)}
       </svg>
       <figcaption>Slides 8–9: varactor tank සහ capacitance vs reverse voltage curve.</figcaption>
     </figure>
+    <p>Tank එකේ C1, C2 වෙනුවට back-to-back <span class="t">varactor diodes</span> <span class="g">(reverse bias කළාම capacitor එකක් වගේ හැසිරෙන diode; reverse voltage වැඩි වෙද්දී capacitance අඩු වෙනවා)</span> D1, D2. V<sub>control</sub> මැදට. Voltage ↑ → C ↓ → f ↑ (f ∝ 1/√LC).</p>
     <div class="warn"><p><strong>⚠ සැලකිය යුතුයි:</strong> Slide 10 එකේ RC oscillator <span class="m">f ∝ 1/√(RC)</span>. වැරදියි: RC oscillators වල <b>f ∝ 1/(RC)</b> (§2, §3: 1/(2πRC√6), 1/(2πRC)). √ එක එන්නේ LC එකට විතරයි.</p></div>
 
     <h3>VCO characteristic (slides 11–12)</h3>
