@@ -6,6 +6,7 @@
 <style>:root{padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}body{margin:0}img{max-width:100%}[hidden]{display:none!important}</style>
 <title>Oscillators සහ Multivibrators</title>
 <meta name="claude:viewport-fit-sides" content="cover">
+<link rel="icon" type="image/svg+xml" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Crect width='64' height='64' rx='14' fill='%230b1014'/%3E%3Cpath d='M6 40H18V20H32V40H46V20H58' fill='none' stroke='%236fc3d1' stroke-width='4' stroke-linejoin='round' opacity='.75'/%3E%3Cpath d='M6 32C12 10 20 10 26 32S40 54 46 32S56 14 58 22' fill='none' stroke='%23f5b041' stroke-width='5' stroke-linecap='round'/%3E%3C/svg%3E">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Familjen+Grotesk:wght@500;700&family=Noto+Sans+Sinhala:wght@400;500;700&family=JetBrains+Mono:wght@400;600&display=swap">
@@ -53,6 +54,29 @@ nav.map ul.sub[hidden]{display:none}
 nav.map ul.sub a{font-size:13px;padding:4px 10px;color:var(--muted);border-left:1px solid var(--line)}
 nav.map ul.sub a.active{color:var(--fg);background:transparent;border-left:2px solid var(--cyan);font-weight:500}
 nav.map{max-height:calc(100vh - 48px);overflow-y:auto}
+/* progress tracker */
+.tick{all:unset;box-sizing:border-box;display:inline-grid;place-items:center;width:24px;height:24px;border-radius:50%;border:2px solid var(--line2);vertical-align:-4px;margin-left:10px;cursor:pointer;transition:background .2s,border-color .2s,transform .15s;flex:none}
+.tick:hover{border-color:var(--good);transform:scale(1.08)}
+.tick:focus-visible{outline:2px solid var(--cyan);outline-offset:2px}
+.tick svg{width:14px;height:14px;opacity:0;transform:scale(.4);transition:opacity .2s,transform .2s}
+.tick.on{background:var(--good);border-color:var(--good)}
+.tick.on svg{opacity:1;transform:none}
+.tick.sm{width:16px;height:16px;border-width:1.5px;margin:0 6px 0 0;vertical-align:-3px}
+.tick.sm svg{width:10px;height:10px}
+nav.map ul.sub li{display:flex;align-items:center}
+nav.map ul.sub li a{flex:1}
+nav.map ul.sub li.done a{color:var(--good)}
+nav.map ol > li > a .cnt{float:right;font-family:var(--f-mono);font-size:11px;color:var(--muted);font-weight:400}
+nav.map ol > li.done > a .cnt{color:var(--good)}
+.prog{margin:0 0 14px;padding:10px 12px;border:1px solid var(--line);border-radius:8px;background:var(--panel)}
+.prog .row{display:flex;justify-content:space-between;align-items:baseline;font-size:13px;color:var(--muted)}
+.prog .row b{font-family:var(--f-mono);color:var(--good);font-size:15px}
+.prog .bar{height:6px;border-radius:3px;background:var(--line);margin-top:8px;overflow:hidden}
+.prog .bar i{display:block;height:100%;width:0;background:var(--good);transition:width .3s}
+.prog button{all:unset;cursor:pointer;font-size:12px;color:var(--muted);margin-top:8px;text-decoration:underline}
+.progpill{position:fixed;right:16px;bottom:16px;z-index:20;display:flex;align-items:center;gap:8px;padding:8px 14px;border-radius:999px;background:var(--panel2);border:1px solid var(--good);color:var(--fg);font-size:13px;box-shadow:0 4px 18px rgba(0,0,0,.4)}
+.progpill b{font-family:var(--f-mono);color:var(--good)}
+@media(min-width:1000px){.progpill{display:none}}
 main{min-width:0}
 .col{max-width:760px}
 
@@ -309,8 +333,8 @@ use.vi{color:var(--violet)}
     <div class="scope" aria-hidden="true">
       <svg viewBox="0 0 720 200">
         <g class="grid" id="scopegrid"></g>
-        <path class="s-sig trace" data-sine="0,100,720,62,4,0" style="stroke-width:2.6"/>
-        <path class="s-fb trace" id="heroSq" style="stroke-width:1.8;opacity:.8"/>
+        <path class="s-sig" id="heroSine" data-sine="0,100,720,62,4,0" style="stroke-width:2.6"/>
+        <path class="s-fb" id="heroSq" style="stroke-width:1.8;opacity:.8"/>
         <text x="12" y="22" class="tx-s" style="font-family:var(--f-mono);fill:#4f7a6a">CH1 sine (harmonic) · CH2 square (relaxation)</text>
       </svg>
     </div>
@@ -1301,6 +1325,16 @@ use.vi{color:var(--violet)}
     for(var gy=0;gy<=200;gy+=40){var l2=document.createElementNS(NS,"line");l2.setAttribute("x1",0);l2.setAttribute("x2",720);l2.setAttribute("y1",gy);l2.setAttribute("y2",gy);g.appendChild(l2);}
     var d="M0 130",x=0,hi=false;while(x<720){x+=45;d+="H"+Math.min(x,720);hi=!hi;if(x<720)d+="V"+(hi?70:130);}
     $("heroSq").setAttribute("d",d);
+    // hero scope: runs only while it is on screen and the tab is visible
+    var hs=$("heroSine"),hq=$("heroSq"),scope=document.querySelector(".scope"),onScreen=false,raf=0,t0=null;
+    function sq(o){var P=90,x=-o,hi=false,s="M0 "+(o<45?70:130);hi=o<45;x=o<45?45-o:90-o;
+      while(x<720){s+="H"+x.toFixed(1);hi=!hi;s+="V"+(hi?70:130);x+=45;}return s+"H720";}
+    function frame(ts){if(t0===null)t0=ts;var k=(ts-t0)/1000;
+      hs.setAttribute("d",sinePath(0,100,720,62,4,(k*90)%360));hq.setAttribute("d",sq((k*40)%90));
+      raf=requestAnimationFrame(frame);}
+    function sync(){var run=onScreen&&!document.hidden;if(run&&!raf){t0=null;raf=requestAnimationFrame(frame);}else if(!run&&raf){cancelAnimationFrame(raf);raf=0;}}
+    if("IntersectionObserver" in window){new IntersectionObserver(function(es){onScreen=es[0].isIntersecting;sync();}).observe(scope);}else{onScreen=true;sync();}
+    document.addEventListener("visibilitychange",sync);
     function env(id,f,col){var s="";for(var j=0;j<=480;j++){var u=j/480,amp=f(u);s+=(j?"L":"M")+(10+u*500).toFixed(1)+" "+(60-amp*Math.sin(2*Math.PI*8*u)).toFixed(1);}$(id).setAttribute("d",s);}
     env("growPath",function(u){return 8*Math.pow(1.05,u*40);});
     env("dampPath",function(u){return 46*Math.pow(0.93,u*8);});
@@ -1671,6 +1705,43 @@ use.vi{color:var(--violet)}
     }
     window.addEventListener("scroll",function(){if(!ticking){ticking=true;requestAnimationFrame(spy);}},{passive:true});
     window.addEventListener("resize",spy);spy();
+  })();
+
+  // ---------- progress tracker: tick each subtopic, saved in this browser ----------
+  (function(){
+    var KEY="ecd-l03-done",done={};
+    try{done=JSON.parse(localStorage.getItem(KEY)||"{}")||{};}catch(e){done={};}
+    function save(){try{localStorage.setItem(KEY,JSON.stringify(done));}catch(e){}}
+    var CHECK='<svg viewBox="0 0 16 16" aria-hidden="true"><path d="M3 8.5l3.2 3.2L13 4.8" fill="none" stroke="#0b1014" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"/></svg>';
+    var nav=document.querySelector("nav.map"),units=[],secs=[];
+    function mk(cls,label){var b=document.createElement("button");b.type="button";b.className="tick"+(cls?" "+cls:"");b.innerHTML=CHECK;b.setAttribute("aria-label",label);return b;}
+    nav.querySelectorAll("ol > li > a").forEach(function(a){
+      var sec=document.getElementById(a.getAttribute("href").slice(1));if(!sec)return;
+      var hs=[].slice.call(sec.querySelectorAll("h3"));if(!hs.length)hs=[sec.querySelector("h2")];
+      var cnt=document.createElement("span");cnt.className="cnt";a.appendChild(cnt);
+      var s={li:a.parentNode,cnt:cnt,us:[]};secs.push(s);
+      hs.forEach(function(h){
+        var id=h.id||sec.id,name=h.childNodes[0].textContent.trim(),u={id:id,btns:[],li:null};
+        var b=mk("","ඉවරයි: "+name);h.appendChild(b);u.btns.push(b);
+        var sa=nav.querySelector('ul.sub a[href="#'+id+'"]');
+        if(sa){var b2=mk("sm","ඉවරයි: "+name);sa.parentNode.insertBefore(b2,sa);u.btns.push(b2);u.li=sa.parentNode;}
+        u.btns.forEach(function(x){x.addEventListener("click",function(ev){ev.preventDefault();ev.stopPropagation();if(done[id])delete done[id];else done[id]=1;save();render();});});
+        units.push(u);s.us.push(u);
+      });
+    });
+    var box=document.createElement("div");box.className="prog";
+    box.innerHTML='<div class="row"><span>ඉවර කළ ප්‍රමාණය</span><b id="pgPct">0%</b></div><div class="bar"><i id="pgBar"></i></div><div class="row" style="margin-top:6px"><span id="pgCnt"></span><button type="button" id="pgReset">මුල ඉඳන්</button></div>';
+    nav.insertBefore(box,nav.querySelector("ol"));
+    var pill=document.createElement("div");pill.className="progpill";pill.innerHTML='<span>ඉවරයි</span><b id="pgPill">0%</b>';document.body.appendChild(pill);
+    $("pgReset").addEventListener("click",function(){if(confirm("Ticks ඔක්කොම අයින් කරන්නද?")){done={};save();render();}});
+    function render(){
+      var n=0;
+      units.forEach(function(u){var on=!!done[u.id];if(on)n++;u.btns.forEach(function(b){b.classList.toggle("on",on);b.setAttribute("aria-pressed",on);});if(u.li)u.li.classList.toggle("done",on);});
+      secs.forEach(function(s){var k=s.us.filter(function(u){return done[u.id];}).length,all=k===s.us.length;s.cnt.textContent=all?"✓":k+"/"+s.us.length;s.li.classList.toggle("done",all);});
+      var p=Math.round(100*n/units.length);
+      $("pgPct").textContent=p+"%";$("pgBar").style.width=p+"%";$("pgCnt").textContent=n+" / "+units.length+" කොටස්";$("pgPill").textContent=p+"% ("+n+"/"+units.length+")";
+    }
+    render();
   })();
 
   function all(){updLoop();updBk();updOne();updLd();updWn();updWg();updLc();updSch();updAs();updMo();updBs();updVc();}
