@@ -58,6 +58,9 @@ a{color:var(--cyan)}
   .resizer:hover::before,.resizer.drag::before,.resizer:focus-visible::before{background:var(--amber)}
   .resizer:hover::after,.resizer.drag::after{background:var(--amber)}
   body.resizing{cursor:col-resize;user-select:none}
+  /* while dragging, skip layout of sections that are off screen so each frame is cheap */
+  main > section{contain-intrinsic-size:auto 1200px}
+  body.resizing main > section{content-visibility:auto}
 }
 nav.map{display:none}
 @media(min-width:1000px){
@@ -3541,8 +3544,9 @@ use.vi{color:var(--violet)}
     rz.addEventListener("pointerdown",function(e){
       e.preventDefault();rz.setPointerCapture(e.pointerId);rz.classList.add("drag");document.body.classList.add("resizing");
       var left=nav.getBoundingClientRect().left;
-      function mv(ev){set(ev.clientX-left-5);}
-      function up(ev){rz.removeEventListener("pointermove",mv);rz.removeEventListener("pointerup",up);rz.removeEventListener("pointercancel",up);rz.classList.remove("drag");document.body.classList.remove("resizing");set(nav.getBoundingClientRect().width,true);window.dispatchEvent(new Event("resize"));}
+      var want=null,raf=0;
+      function mv(ev){want=ev.clientX-left-5;if(!raf)raf=requestAnimationFrame(function(){raf=0;set(want);});}
+      function up(ev){if(raf){cancelAnimationFrame(raf);raf=0;if(want!=null)set(want);}rz.removeEventListener("pointermove",mv);rz.removeEventListener("pointerup",up);rz.removeEventListener("pointercancel",up);rz.classList.remove("drag");document.body.classList.remove("resizing");set(nav.getBoundingClientRect().width,true);window.dispatchEvent(new Event("resize"));}
       rz.addEventListener("pointermove",mv);rz.addEventListener("pointerup",up);rz.addEventListener("pointercancel",up);
     });
     rz.addEventListener("dblclick",function(){set(DEF,true);window.dispatchEvent(new Event("resize"));});
