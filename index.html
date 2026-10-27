@@ -49,7 +49,7 @@ body{background:var(--bg);color:var(--fg);font-family:var(--f-body);font-size:16
 a{color:var(--cyan)}
 :focus-visible{outline:2px solid var(--amber);outline-offset:2px}
 .wrap{max-width:1120px;margin:0 auto;display:grid;grid-template-columns:1fr;gap:40px;padding-block:28px 80px}
-@media(min-width:1000px){.wrap{grid-template-columns:var(--navw,240px) 10px minmax(0,1fr);column-gap:16px;max-width:calc(880px + var(--navw,240px))}}
+@media(min-width:1000px){.wrap{max-width:none}.wrap{grid-template-columns:var(--navw,240px) 10px minmax(0,1fr);column-gap:16px}}
 .resizer{display:none}
 @media(min-width:1000px){
   .resizer{display:block;position:sticky;top:calc(env(safe-area-inset-top,0px) + 24px);align-self:start;height:calc(100vh - 48px);cursor:col-resize;touch-action:none;border-radius:5px}
@@ -94,7 +94,7 @@ nav.map ul.sub li.done a{color:var(--good)}
 nav.map ol > li > a .cnt{float:right;font-family:var(--f-mono);font-size:11px;color:var(--muted);font-weight:400}
 nav.map ol > li.done > a .cnt{color:var(--good)}
 .prog{position:sticky;top:0;z-index:3;box-shadow:0 -24px 0 var(--bg),0 10px 14px -6px var(--bg);margin:0 0 14px;padding:10px 12px;border:1px solid var(--line);border-radius:8px;background:var(--panel)}
-.prog .row{display:flex;justify-content:space-between;align-items:baseline;font-size:13px;color:var(--muted)}
+.prog .row{white-space:nowrap;gap:8px;display:flex;justify-content:space-between;align-items:baseline;font-size:13px;color:var(--muted)}
 .prog .row b{font-family:var(--f-mono);color:var(--good);font-size:15px}
 .prog .bar{height:6px;border-radius:3px;background:var(--line);margin-top:8px;overflow:hidden}
 .prog .bar i{display:block;height:100%;width:0;background:var(--good);transition:width .3s}
