@@ -1,0 +1,1050 @@
+<!doctype html>
+<html lang="si">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<style>:root{padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}body{margin:0}img{max-width:100%}[hidden]{display:none!important}</style>
+<title>Oscillators හැඳින්වීම</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Familjen+Grotesk:wght@500;700&family=Noto+Sans+Sinhala:wght@400;500;700&family=JetBrains+Mono:wght@400;600&display=swap">
+<style>
+/* Layout: oscilloscope-screen hero, then one reading column of lesson sections; sticky lesson map on wide screens */
+:root{
+  --bg:#0c1115;        /* scope bezel graphite */
+  --panel:#131a20;
+  --panel2:#18212a;
+  --line:#25313b;
+  --line2:#3a4955;
+  --fg:#dfe6ea;
+  --muted:#93a2ad;
+  --amber:#f1b34f;     /* the signal trace */
+  --cyan:#6cc4d6;      /* feedback path */
+  --coral:#ef8a6c;     /* growing / clipping */
+  --violet:#b8a2f2;    /* steady oscillation */
+  --good:#7fd19b;
+  --warnbg:#2a1f12;
+  --warnline:#8a6424;
+  --f-display:"Familjen Grotesk","Noto Sans Sinhala",system-ui,sans-serif;
+  --f-body:"Noto Sans Sinhala","Familjen Grotesk",system-ui,sans-serif;
+  --f-mono:"JetBrains Mono",ui-monospace,Menlo,Consolas,monospace;
+  color-scheme:dark;
+}
+*{box-sizing:border-box}
+body{background:var(--bg);color:var(--fg);font-family:var(--f-body);font-size:16.5px;line-height:1.85;
+  padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px))}
+a{color:var(--cyan)}
+:focus-visible{outline:2px solid var(--amber);outline-offset:2px}
+.wrap{max-width:1120px;margin:0 auto;display:grid;grid-template-columns:1fr;gap:40px;padding-block:28px 80px}
+@media(min-width:1000px){.wrap{grid-template-columns:220px minmax(0,1fr)}}
+nav.map{display:none}
+@media(min-width:1000px){
+  nav.map{display:block;position:sticky;top:calc(env(safe-area-inset-top,0px) + 24px);align-self:start;font-size:14px;line-height:1.5}
+}
+nav.map p{font-family:var(--f-display);font-size:12px;letter-spacing:.12em;text-transform:uppercase;color:var(--muted);margin:0 0 10px}
+nav.map ol{list-style:none;margin:0;padding:0;display:grid;gap:4px;counter-reset:s}
+nav.map a{display:block;padding:6px 10px;border-radius:6px;color:var(--fg);text-decoration:none;border-left:2px solid var(--line)}
+nav.map a:hover{background:var(--panel);border-left-color:var(--line2)}
+nav.map a{transition:background .2s,border-color .2s,color .2s}
+nav.map a.active{background:var(--panel2);border-left-color:var(--amber);color:var(--amber);font-weight:500}
+nav.map ul.sub{list-style:none;margin:4px 0 6px 12px;padding:0;display:grid;gap:2px}
+nav.map ul.sub[hidden]{display:none}
+nav.map ul.sub a{font-size:13px;padding:4px 10px;color:var(--muted);border-left:1px solid var(--line)}
+nav.map ul.sub a.active{color:var(--fg);background:transparent;border-left:2px solid var(--cyan);font-weight:500}
+nav.map{max-height:calc(100vh - 48px);overflow-y:auto}
+main{min-width:0}
+.col{max-width:760px}
+
+/* hero */
+.hero{display:grid;gap:22px;margin-bottom:28px}
+.scope{background:#070b0d;border:1px solid var(--line2);border-radius:14px;padding:14px;max-width:760px}
+.scope svg{display:block;width:100%;height:auto}
+.eyebrow{font-family:var(--f-display);font-size:13px;letter-spacing:.14em;text-transform:uppercase;color:var(--amber);margin:0}
+h1{font-family:var(--f-display);font-weight:700;font-size:clamp(34px,6vw,54px);line-height:1.1;margin:4px 0 8px;text-wrap:balance}
+h1 small{display:block;font-family:var(--f-body);font-weight:500;font-size:.5em;color:var(--muted);margin-top:6px}
+.lede{font-size:18px;color:var(--fg);max-width:62ch;margin:0}
+.inlinemap{display:flex;flex-wrap:wrap;gap:8px;margin-top:6px}
+.inlinemap a{font-size:13.5px;padding:4px 10px;border:1px solid var(--line2);border-radius:999px;text-decoration:none;color:var(--fg);line-height:1.6}
+@media(min-width:1000px){.inlinemap{display:none}}
+
+/* sections */
+section.topic{padding-top:36px;margin-top:36px;border-top:1px solid var(--line)}
+.sn{font-family:var(--f-mono);font-size:13px;color:var(--amber);letter-spacing:.06em}
+h2{font-family:var(--f-display);font-size:clamp(25px,3.6vw,32px);line-height:1.25;margin:2px 0 14px;text-wrap:balance}
+h3{font-family:var(--f-display);font-size:20px;margin:28px 0 8px;text-wrap:balance}
+p{margin:0 0 14px}
+ul,ol{margin:0 0 14px;padding-left:1.3em}
+li{margin-bottom:6px}
+.t{font-family:var(--f-display);font-weight:700;color:var(--amber)}   /* technical term */
+.g{color:var(--muted)}                                               /* gloss */
+b{font-weight:700}
+.fig{margin:18px 0 22px;background:var(--panel);border:1px solid var(--line);border-radius:12px;padding:14px;overflow-x:auto}
+.fig svg{display:block;width:100%;height:auto;min-width:300px}
+.fig figcaption,.cap{font-size:14px;color:var(--muted);margin-top:8px;line-height:1.6}
+figure{margin:0}
+.two{display:grid;grid-template-columns:1fr;gap:14px}
+@media(min-width:640px){.two{grid-template-columns:1fr 1fr}}
+.two>*{min-width:0}
+
+.eq{font-family:var(--f-mono);background:var(--panel2);border:1px solid var(--line);border-radius:8px;padding:10px 14px;margin:10px 0;overflow-x:auto;white-space:nowrap;font-size:15px;line-height:1.7}
+.eq .c{color:var(--muted);font-family:var(--f-body);font-size:14px;white-space:normal}
+code,.m{font-family:var(--f-mono);font-size:.92em;color:var(--fg);background:var(--panel2);padding:1px 6px;border-radius:4px}
+
+.warn{background:var(--warnbg);border:1px solid var(--warnline);border-radius:10px;padding:12px 16px;margin:18px 0}
+.warn strong{color:var(--amber);font-family:var(--f-body)}
+.warn p:last-child{margin-bottom:0}
+.note{border-left:3px solid var(--cyan);padding:4px 0 4px 14px;margin:16px 0;color:var(--fg)}
+
+table{border-collapse:collapse;width:100%;font-size:15px}
+th,td{border-bottom:1px solid var(--line);padding:8px 10px;text-align:left;vertical-align:top}
+th{font-family:var(--f-display);color:var(--muted);font-weight:500;font-size:13px;letter-spacing:.06em;text-transform:uppercase}
+.tbl{overflow-x:auto;margin:14px 0}
+td.mono{font-family:var(--f-mono);white-space:nowrap}
+
+/* practice */
+.practice{margin-top:28px;background:var(--panel);border:1px solid var(--line);border-radius:12px;padding:16px 18px}
+.practice h3{margin-top:0;color:var(--cyan);font-size:18px}
+.practice ol.qs{padding-left:1.4em}
+details{border-top:1px solid var(--line);padding:10px 0}
+details:first-of-type{margin-top:8px}
+summary{cursor:pointer;font-weight:500;color:var(--cyan)}
+details .ans{padding:10px 0 2px}
+details .ans ol{padding-left:1.3em}
+
+/* widgets */
+.widget{margin:22px 0;background:#0a0f12;border:1px solid var(--line2);border-radius:14px;padding:16px}
+.widget .wt{font-family:var(--f-display);font-size:13px;letter-spacing:.12em;text-transform:uppercase;color:var(--violet);margin:0 0 10px}
+.ctrls{display:grid;gap:12px;margin-bottom:12px}
+@media(min-width:640px){.ctrls.cols{grid-template-columns:1fr 1fr}}
+.ctrl{display:grid;gap:4px;min-width:0}
+.ctrl label{font-size:14px;display:flex;justify-content:space-between;gap:8px}
+.ctrl output{font-family:var(--f-mono);color:var(--amber)}
+input[type=range]{width:100%;accent-color:var(--amber)}
+.seg{display:flex;flex-wrap:wrap;gap:8px;font-size:14px}
+.seg label{display:flex;align-items:center;gap:6px;border:1px solid var(--line2);border-radius:999px;padding:4px 12px;cursor:pointer}
+.seg input{accent-color:var(--amber)}
+canvas{display:block;width:100%;height:220px;background:#05080a;border-radius:8px}
+canvas.mini{height:120px}
+.status{margin-top:10px;font-size:15px;line-height:1.7;min-height:3.4em}
+.chips{display:flex;flex-wrap:wrap;gap:8px;margin-top:10px}
+.chip{font-size:13.5px;border-radius:999px;padding:3px 12px;border:1px solid var(--line2);color:var(--muted)}
+.chip.ok{border-color:var(--good);color:var(--good)}
+.chip.bad{border-color:var(--coral);color:var(--coral)}
+.readout{font-family:var(--f-mono);font-size:15px;display:flex;flex-wrap:wrap;gap:6px 22px;margin-top:8px}
+.readout span b{color:var(--amber);font-weight:600}
+
+.minis{display:grid;grid-template-columns:1fr;gap:12px}
+@media(min-width:700px){.minis{grid-template-columns:repeat(3,1fr)}}
+.minis figure{background:var(--panel);border:1px solid var(--line);border-radius:10px;padding:10px;min-width:0}
+.minis .lbl{font-family:var(--f-mono);font-size:14px;margin-bottom:6px}
+
+/* svg drawing classes */
+.s-line{stroke:var(--line2);fill:none;stroke-width:2}
+.s-main{stroke:var(--fg);fill:none;stroke-width:2}
+.s-sig{stroke:var(--amber);fill:none;stroke-width:2.2}
+.s-fb{stroke:var(--cyan);fill:none;stroke-width:2.2}
+.s-cor{stroke:var(--coral);fill:none;stroke-width:2.2}
+.s-vio{stroke:var(--violet);fill:none;stroke-width:2.2}
+.s-dash{stroke-dasharray:6 5}
+.f-panel{fill:var(--panel2)}
+.f-bg{fill:var(--bg)}
+.f-amber{fill:var(--amber)}
+.f-cyan{fill:var(--cyan)}
+.f-coral{fill:var(--coral)}
+.f-muted{fill:var(--muted)}
+.tx{fill:var(--fg);font-family:var(--f-body);font-size:15px}
+.tx-s{fill:var(--muted);font-family:var(--f-body);font-size:13px}
+.tx-m{fill:var(--fg);font-family:var(--f-mono);font-size:15px}
+.tx-a{fill:var(--amber);font-family:var(--f-mono);font-size:15px}
+.tx-c{fill:var(--cyan);font-family:var(--f-mono);font-size:15px}
+.tx-big{fill:var(--fg);font-family:var(--f-display);font-weight:700;font-size:20px}
+.grid line{stroke:#1a2a2a;stroke-width:1}
+
+.summary table td:first-child{font-family:var(--f-body)}
+footer{margin-top:50px;color:var(--muted);font-size:14px;border-top:1px solid var(--line);padding-top:16px}
+@media (prefers-reduced-motion:no-preference){
+  .trace{stroke-dasharray:1400;stroke-dashoffset:1400;animation:draw 2.4s ease-out .2s forwards}
+  @keyframes draw{to{stroke-dashoffset:0}}
+}
+</style>
+</head>
+<body>
+
+
+<!-- shared drawing parts -->
+<svg width="0" height="0" style="position:absolute" aria-hidden="true">
+  <defs>
+    <marker id="arr" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0 0L10 5L0 10z" fill="#93a2ad"/></marker>
+    <marker id="arrA" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0 0L10 5L0 10z" fill="#f1b34f"/></marker>
+    <marker id="arrC" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0 0L10 5L0 10z" fill="#6cc4d6"/></marker>
+    <!-- the feedback loop: Σ, amplifier A, β network -->
+    <symbol id="loop" viewBox="0 0 560 260">
+      <line x1="40" y1="90" x2="89" y2="90" class="s-sig" marker-end="url(#arrA)"/>
+      <circle cx="110" cy="90" r="20" class="s-main f-panel" style="fill:var(--panel2)"/>
+      <text x="110" y="96" text-anchor="middle" class="tx-m">Σ</text>
+      <line x1="130" y1="90" x2="208" y2="90" class="s-sig" marker-end="url(#arrA)"/>
+      <path d="M210 40 L210 140 L300 90 Z" class="s-main" style="fill:var(--panel2)"/>
+      <text x="236" y="97" class="tx-big">A</text>
+      <line x1="300" y1="90" x2="500" y2="90" class="s-sig" marker-end="url(#arrA)"/>
+      <circle cx="440" cy="90" r="4" class="f-amber"/>
+      <line x1="440" y1="90" x2="440" y2="210" class="s-fb"/>
+      <line x1="440" y1="210" x2="362" y2="210" class="s-fb" marker-end="url(#arrC)"/>
+      <rect x="220" y="180" width="140" height="60" rx="6" class="s-fb" style="fill:var(--panel2)"/>
+      <text x="290" y="218" text-anchor="middle" class="tx-big" style="fill:var(--cyan)">β</text>
+      <polyline points="220,210 110,210 110,112" class="s-fb" marker-end="url(#arrC)"/>
+    </symbol>
+  </defs>
+</svg>
+
+<div class="wrap">
+  <nav class="map" aria-label="පාඩම් සිතියම">
+    <p>පාඩම් සිතියම</p>
+    <ol>
+      <li><a href="#what">1 · Oscillator කියන්නේ</a></li>
+      <li><a href="#feedback">2 · Positive feedback</a></li>
+      <li><a href="#gain">3 · Gain සූත්‍රය</a></li>
+      <li><a href="#loopgain">4 · Aβ &lt; 1, &gt; 1, = 1</a></li>
+      <li><a href="#barkhausen">5 · Barkhausen criteria</a></li>
+      <li><a href="#startup">6 · පටන් ගන්න හැටි</a></li>
+      <li><a href="#types">7 · Oscillator වර්ග</a></li>
+      <li><a href="#formulas">සූත්‍ර සාරාංශය</a></li>
+    </ol>
+  </nav>
+
+  <main>
+  <header class="hero col">
+    <div class="scope" aria-hidden="true">
+      <svg viewBox="0 0 720 200">
+        <g class="grid" id="scopegrid"></g>
+        <path class="s-sig trace" data-sine="0,100,720,62,4,0" style="stroke-width:2.6"/>
+        <text x="12" y="22" class="tx-s" style="font-family:var(--f-mono);fill:#4f7a6a">CH1  2 V/div   1 ms/div</text>
+      </svg>
+    </div>
+    <div>
+      <p class="eyebrow">ECD · Oscillators · පාඩම 1</p>
+      <h1>Oscillators හැඳින්වීම<small>Input signal එකක් නැතුවම, තමන් විසින්ම wave එකක් හදන circuit එක</small></h1>
+      <p class="lede">මේ පාඩමෙන් අපි තේරුම් ගන්නවා oscillator එකක් ඇතුලේ මොකද වෙන්නේ, ඒක දිගටම පැද්දෙන්න (oscillate වෙන්න) ඕනේ කොන්දේසි මොනවද, ඒක පටන් ගන්නේ කොහොමද, සහ oscillator වර්ග මොනවද කියලා. Slides 10 ම මෙතන තියෙනවා, ටිකක් වෙනස් පිළිවෙළකට, තේරෙන්න ලේසි විදියට.</p>
+    </div>
+    <div class="inlinemap">
+      <a href="#what">1 · Oscillator</a><a href="#feedback">2 · Feedback</a><a href="#gain">3 · Gain සූත්‍රය</a><a href="#loopgain">4 · Aβ</a><a href="#barkhausen">5 · Barkhausen</a><a href="#startup">6 · පටන් ගැනීම</a><a href="#types">7 · වර්ග</a><a href="#formulas">සූත්‍ර</a>
+    </div>
+  </header>
+
+  <!-- ============ 1 ============ -->
+  <section class="topic col" id="what">
+    <div class="sn">01 · Slide 1</div>
+    <h2>Oscillator කියන්නේ මොකක්ද?</h2>
+    <p><span class="t">Oscillator</span> <span class="g">(දිගටම පැද්දෙන signal එකක් හදන circuit එක)</span> එකක් කියන්නේ, input එකට කිසිම AC signal එකක් දෙන්නේ නැතුව, output එකේ දිගටම උඩට පහළට යන wave එකක් දෙන circuit එකක්.</p>
+    <p>ඒකට දෙන්න ඕනේ <b>DC power supply</b> එකක් විතරයි <span class="g">(බැටරියක් වගේ, එක දිශාවට විතරක් යන current එකක්)</span>. Circuit එක ඒ DC energy එක අරගෙන ඒක <span class="t">AC output</span> <span class="g">(දිශාව මාරු වෙවී යන signal එකක්)</span> බවට හරවනවා.</p>
+
+    <figure class="fig">
+      <svg viewBox="0 0 620 170" role="img" aria-label="DC supply එක oscillator එකට, output එක sine wave එකක්">
+        <!-- battery -->
+        <line x1="40" y1="60" x2="40" y2="110" class="s-main"/>
+        <line x1="54" y1="72" x2="54" y2="98" class="s-main" style="stroke-width:4"/>
+        <line x1="68" y1="60" x2="68" y2="110" class="s-main"/>
+        <line x1="82" y1="72" x2="82" y2="98" class="s-main" style="stroke-width:4"/>
+        <text x="30" y="140" class="tx-s">DC supply (Vcc)</text>
+        <line x1="96" y1="85" x2="208" y2="85" class="s-line" marker-end="url(#arr)"/>
+        <text x="120" y="74" class="tx-s">energy</text>
+        <rect x="210" y="45" width="170" height="80" rx="14" class="s-main" style="fill:var(--panel2)"/>
+        <text x="295" y="92" text-anchor="middle" class="tx-big">Oscillator</text>
+        <line x1="380" y1="85" x2="430" y2="85" class="s-line" marker-end="url(#arr)"/>
+        <path class="s-sig" data-sine="440,85,160,32,2.5,0"/>
+        <text x="440" y="150" class="tx-s">AC output · Hz සිට GHz දක්වා</text>
+      </svg>
+      <figcaption>Slide 1 රූපය: වම් පැත්තෙන් DC එනවා, දකුණු පැත්තෙන් AC wave එකක් එනවා.</figcaption>
+    </figure>
+
+    <h3>Amplifier එකයි Oscillator එකයි අතර වෙනස</h3>
+    <p><span class="t">Amplifier</span> <span class="g">(signal එක ලොකු කරන කොටස)</span> එකකට input signal එකක් දුන්නොත් තමයි output එකක් එන්නේ. Input එක නැත්නම් output එකත් නෑ. Oscillator එකට input signal එකක් ඕනේ නෑ. ඒක තමන්ගේම output එකෙන් කොටසක් ආපහු input එකට දාගෙන දිගටම වැඩ කරනවා (මේක ඊළඟ කොටසින් බලමු).</p>
+    <figure class="fig">
+      <svg viewBox="0 0 640 150" role="img" aria-label="Amplifier එකට input wave එකක් ඕනේ, oscillator එකට එපා">
+        <text x="10" y="22" class="tx">Amplifier</text>
+        <path class="s-sig" data-sine="10,75,70,10,1.5,0"/>
+        <line x1="88" y1="75" x2="128" y2="75" class="s-line" marker-end="url(#arr)"/>
+        <path d="M130 45 L130 105 L180 75Z" class="s-main" style="fill:var(--panel2)"/>
+        <line x1="182" y1="75" x2="215" y2="75" class="s-line" marker-end="url(#arr)"/>
+        <path class="s-sig" data-sine="220,75,80,30,1.5,0"/>
+        <text x="10" y="135" class="tx-s">පුංචි input → ලොකු output</text>
+        <line x1="320" y1="10" x2="320" y2="140" class="s-line"/>
+        <text x="340" y="22" class="tx">Oscillator</text>
+        <text x="340" y="80" class="tx-s">input නෑ</text>
+        <line x1="404" y1="75" x2="444" y2="75" class="s-line s-dash" marker-end="url(#arr)"/>
+        <rect x="446" y="50" width="70" height="50" rx="8" class="s-main" style="fill:var(--panel2)"/>
+        <text x="481" y="80" text-anchor="middle" class="tx-m">OSC</text>
+        <line x1="518" y1="75" x2="548" y2="75" class="s-line" marker-end="url(#arr)"/>
+        <path class="s-sig" data-sine="552,75,80,30,1.5,0"/>
+        <text x="340" y="135" class="tx-s">input නැතුවම output wave එකක්</text>
+      </svg>
+    </figure>
+
+    <h3>Frequency කියන්නේ</h3>
+    <p><span class="t">Frequency (f)</span> <span class="g">(තත්පරයකට wave එක සම්පූර්ණ වට කීයක් යනවද)</span>. ඒකක Hz. එක වටයකට යන කාලය <span class="t">Period (T)</span>. මේ දෙක අතර සම්බන්ධය:</p>
+    <div class="eq">T = 1 / f &nbsp;&nbsp;&nbsp; f = 1 / T</div>
+    <div class="tbl"><table>
+      <tr><th>ඒකකය</th><th>අගය</th><th>උදාහරණයක්</th></tr>
+      <tr><td class="mono">Hz</td><td class="mono">1</td><td>LED එකක් තත්පරයට වතාවක් නිවී දැල්වෙන එක</td></tr>
+      <tr><td class="mono">kHz</td><td class="mono">10³</td><td>ඔරලෝසු crystal එක (32.768 kHz), audio tones</td></tr>
+      <tr><td class="mono">MHz</td><td class="mono">10⁶</td><td>FM radio (88–108 MHz), microcontroller clock (16 MHz)</td></tr>
+      <tr><td class="mono">GHz</td><td class="mono">10⁹</td><td>Phone processor එක, WiFi (2.4 GHz)</td></tr>
+    </table></div>
+    <p>ඉතින් ඔයාගේ phone එකේ, ඔරලෝසුවේ, radio එකේ, computer එකේ, හැම තැනම ඇතුලේ oscillator එකක් තියෙනවා. ඒවා තමයි circuit එකේ "හෘද ස්පන්දනය" (clock එක) දෙන්නේ.</p>
+
+    <div class="warn">
+      <p><strong>⚠ සැලකිය යුතුයි:</strong> Slide 1 එකේ input එක <b>"DC Signal"</b> කියලා ලියලා තියෙනවා. ඇත්තටම එතන තියෙන්නේ signal එකක් නෙවෙයි, <b>DC power supply</b> එකක් (Vcc). ඒකෙන් එන්නේ energy විතරයි, කිසිම තොරතුරක් හෝ wave එකක් නෙවෙයි. Exam එකේ ලියද්දී "DC supply එකේ energy එක AC signal එකක් බවට හරවනවා" කියලා ලියන්න.</p>
+    </div>
+
+    <div class="practice">
+      <h3>පුහුණු ප්‍රශ්න · 1</h3>
+      <ol class="qs">
+        <li>Oscillator එකකට input signal එකක් අවශ්‍යද? එයට අවශ්‍ය වෙන්නේ මොනවද?</li>
+        <li>2 MHz oscillator එකක period එක කීයද?</li>
+        <li>Amplifier එකක් සහ oscillator එකක් අතර ප්‍රධාන වෙනස එක වාක්‍යයකින් කියන්න.</li>
+      </ol>
+      <details><summary>පිළිතුර 1</summary><div class="ans">
+        <ol><li>නෑ. Oscillator එකට AC input signal එකක් ඕනේ නෑ.</li>
+        <li>ඕනේ DC power supply එක විතරයි. Circuit එක ඒ DC energy එක AC wave එකක් බවට හරවනවා.</li></ol>
+      </div></details>
+      <details><summary>පිළිතුර 2</summary><div class="ans">
+        <ol><li>සූත්‍රය: <span class="m">T = 1/f</span></li>
+        <li>f = 2 MHz = 2 × 10⁶ Hz</li>
+        <li>T = 1 / (2 × 10⁶) = 0.5 × 10⁻⁶ s = <b>0.5 µs</b></li></ol>
+        <figure class="fig"><svg viewBox="0 0 520 130" role="img" aria-label="එක වටයක් 0.5 මයික්‍රො තත්පර">
+          <line x1="20" y1="65" x2="500" y2="65" class="s-line"/>
+          <path class="s-sig" data-sine="20,65,480,40,2,0"/>
+          <line x1="80" y1="18" x2="320" y2="18" class="s-fb" marker-start="url(#arrC)" marker-end="url(#arrC)"/>
+          <line x1="80" y1="12" x2="80" y2="30" class="s-fb"/><line x1="320" y1="12" x2="320" y2="30" class="s-fb"/>
+          <text x="200" y="12" text-anchor="middle" class="tx-c">T = 0.5 µs</text>
+          <text x="20" y="122" class="tx-s">peak එකේ සිට ඊළඟ peak එකට = එක period එකක්</text>
+        </svg></figure>
+      </div></details>
+      <details><summary>පිළිතුර 3</summary><div class="ans">
+        <p>Amplifier එකට output එකක් දෙන්න input signal එකක් ඕනේ. Oscillator එක input signal එකක් නැතුවම, DC supply එකෙන් විතරක් තමන්ගේම output wave එකක් හදනවා.</p>
+      </div></details>
+    </div>
+  </section>
+
+  <!-- ============ 2 ============ -->
+  <section class="topic col" id="feedback">
+    <div class="sn">02 · Slide 2</div>
+    <h2>Oscillator = Positive feedback තියෙන Amplifier එකක්</h2>
+    <p>Oscillator එකක ඇතුලත ප්‍රධාන කොටස් තුනයි. Slide 2 රූපයේ ඒවා තියෙනවා:</p>
+    <figure class="fig">
+      <svg viewBox="0 0 560 260" role="img" aria-label="Σ, A, β සහිත positive feedback loop එක">
+        <use href="#loop"/>
+        <text x="8" y="80" class="tx-a">Vin</text>
+        <text x="86" y="62" class="tx-a">+</text>
+        <text x="122" y="132" class="tx-c">+</text>
+        <text x="506" y="96" class="tx-a">Vout</text>
+        <text x="300" y="168" class="tx-s">feedback network</text>
+        <text x="190" y="30" class="tx-s">amplifier (gain A)</text>
+      </svg>
+      <figcaption>කහ පාර: ඉදිරියට යන signal එක. නිල් පාර: output එකෙන් ආපහු input එකට එන කොටස (feedback).</figcaption>
+    </figure>
+    <ul>
+      <li><span class="t">A</span> <span class="g">(gain: signal එක කී ගුණයකින් ලොකු කරනවද)</span>. උදා: A = 50 නම් 1 mV දුන්නොත් 50 mV එනවා.</li>
+      <li><span class="t">β (beta)</span> <span class="g">(feedback network: output එකෙන් කොටසක් අරන් ආපහු යවන කොටස)</span>. සාමාන්‍යයෙන් β එක 1ට අඩුයි. <span class="m">β = Vf / Vout</span>. උදා: β = 0.02 නම් output එකෙන් 2% ක් ආපහු යනවා.</li>
+      <li><span class="t">Σ (summing point)</span> <span class="g">(signals දෙකක් එකතු කරන තැන)</span>. ලකුණු දෙකම <b>+</b> නිසා ආපහු එන කොටස input එකට <b>එකතු</b> වෙනවා.</li>
+    </ul>
+
+    <h3>Positive feedback සහ Negative feedback</h3>
+    <div class="two">
+      <figure class="fig" style="margin:0">
+        <svg viewBox="0 0 560 260" role="img" aria-label="Positive feedback: + ලකුණ">
+          <use href="#loop"/>
+          <text x="122" y="132" class="tx-c" style="font-size:22px">+</text>
+          <text x="12" y="30" class="tx" style="fill:var(--good)">Positive feedback</text>
+        </svg>
+        <figcaption><b>Positive</b>: ආපහු එන කොටස input එකට එකතු වෙනවා. Signal එක තවත් ලොකු වෙන්න උදව් වෙනවා. <b>Oscillator</b> වලට පාවිච්චි කරන්නේ මේක.</figcaption>
+      </figure>
+      <figure class="fig" style="margin:0">
+        <svg viewBox="0 0 560 260" role="img" aria-label="Negative feedback: − ලකුණ">
+          <use href="#loop"/>
+          <text x="122" y="134" class="tx-c" style="font-size:26px;fill:var(--coral)">−</text>
+          <text x="12" y="30" class="tx" style="fill:var(--coral)">Negative feedback</text>
+        </svg>
+        <figcaption><b>Negative</b>: ආපහු එන කොටස input එකෙන් අඩු වෙනවා. Gain අඩු වුණත් circuit එක ස්ථාවරයි. සාමාන්‍ය <b>amplifier</b> වලට පාවිච්චි කරන්නේ මේක.</figcaption>
+      </figure>
+    </div>
+
+    <h3>එදිනෙදා උදාහරණයක්: Mic එක speaker එක ළඟට ගියාම</h3>
+    <p>Function එකකදී mic එක speaker එක ළඟට ගෙනිච්චම "කීඊඊඊ" කියලා සද්දයක් එනවා නේද? ඒක හරියටම positive feedback oscillation එකක්. Mic එකට එන පුංචි සද්දය amplifier එකෙන් ලොකු වෙනවා, speaker එකෙන් එළියට එනවා, ඒක ආයේ mic එකට යනවා, ආයේ ලොකු වෙනවා... Input එකක් කවුරුත් දුන්නේ නැතත් සද්දයක් හැදෙනවා.</p>
+    <figure class="fig">
+      <svg viewBox="0 -40 600 230" role="img" aria-label="Mic, amplifier, speaker, සද්දය ආපහු mic එකට">
+        <rect x="40" y="70" width="22" height="40" rx="11" class="s-main" style="fill:var(--panel2)"/>
+        <line x1="51" y1="110" x2="51" y2="128" class="s-main"/>
+        <text x="30" y="150" class="tx-s">Mic</text>
+        <line x1="64" y1="90" x2="208" y2="90" class="s-sig" marker-end="url(#arrA)"/>
+        <path d="M210 55 L210 125 L280 90Z" class="s-main" style="fill:var(--panel2)"/>
+        <text x="222" y="96" class="tx-m">A</text>
+        <text x="196" y="148" class="tx-s">Amplifier</text>
+        <line x1="282" y1="90" x2="400" y2="90" class="s-sig" marker-end="url(#arrA)"/>
+        <path d="M404 78 L420 78 L444 58 L444 122 L420 102 L404 102Z" class="s-main" style="fill:var(--panel2)"/>
+        <text x="404" y="148" class="tx-s">Speaker</text>
+        <path d="M456 72 q10 18 0 36 M468 64 q16 26 0 52" class="s-fb"/>
+        <path d="M480 60 C 560 0, 120 -10, 54 62" class="s-fb s-dash" marker-end="url(#arrC)"/>
+        <text x="200" y="-20" class="tx-c" style="font-family:var(--f-body)">සද්දය ආපහු mic එකට = β</text>
+      </svg>
+      <figcaption>Amplifier = A. Speaker එකේ සිට mic එකට යන සද්දයේ කොටස = β. මේ loop එක තමයි oscillator එක.</figcaption>
+    </figure>
+
+    <div class="practice">
+      <h3>පුහුණු ප්‍රශ්න · 2</h3>
+      <ol class="qs">
+        <li>Vout = 5 V සහ β = 0.02 නම්, ආපහු එන feedback voltage එක Vf කීයද?</li>
+        <li>Oscillator එකකට පාවිච්චි කරන්නේ positive feedback ද negative feedback ද? ඇයි?</li>
+        <li>Mic-speaker උදාහරණයේ A සහ β වෙන්නේ මොනවද? Mic එක speaker එකෙන් ඈතට ගෙනිච්චොත් මොකද වෙන්නේ?</li>
+      </ol>
+      <details><summary>පිළිතුර 1</summary><div class="ans">
+        <ol><li>β = Vf / Vout නිසා <span class="m">Vf = β × Vout</span></li>
+        <li>Vf = 0.02 × 5 = <b>0.1 V</b> (100 mV)</li></ol>
+      </div></details>
+      <details><summary>පිළිතුර 2</summary><div class="ans">
+        <p><b>Positive feedback.</b> ආපහු එන කොටස input එකට එකතු වෙන නිසා, signal එකට තමන්ම තමන්ව නඩත්තු කරගන්න පුළුවන්. Negative feedback වලදී ආපහු එන කොටස අඩු වෙන නිසා signal එක මැකිලා යනවා.</p>
+      </div></details>
+      <details><summary>පිළිතුර 3</summary><div class="ans">
+        <ol><li>A = amplifier එකේ gain. β = speaker එකේ සද්දයෙන් mic එකට ආපහු එන කොටස.</li>
+        <li>Mic එක ඈතට ගෙනිච්චම mic එකට එන සද්දය අඩුයි, ඒ කියන්නේ <b>β අඩු වෙනවා</b>. එතකොට A × β ගුණිතය 1ට වඩා අඩු වෙන නිසා "කීඊඊ" සද්දය නවතිනවා. (මේ අදහස 4 වෙනි කොටසේ පැහැදිලියි.)</li></ol>
+      </div></details>
+    </div>
+  </section>
+
+  <!-- ============ 3 ============ -->
+  <section class="topic col" id="gain">
+    <div class="sn">03 · Slides 3 සහ 9</div>
+    <h2>Feedback සහිත gain සූත්‍රය: A / (1 − Aβ)</h2>
+    <p>දැන් loop එක වටේ voltage මොනවද කියලා පියවරෙන් පියවර ලියමු. මේක තමයි මුළු පාඩමේම වැදගත්ම derivation එක.</p>
+    <figure class="fig">
+      <svg viewBox="0 0 560 260" role="img" aria-label="loop එකේ voltages: Vin, Vin + Vf, Vout, Vf = βVout">
+        <use href="#loop"/>
+        <text x="4" y="80" class="tx-a">Vin</text>
+        <text x="86" y="62" class="tx-a">+</text>
+        <text x="122" y="132" class="tx-c">+</text>
+        <text x="134" y="78" class="tx-a" style="font-size:13px">Vin + Vf</text>
+        <text x="455" y="80" class="tx-a">Vout</text>
+        <text x="120" y="252" class="tx-c">Vf = β·Vout</text>
+      </svg>
+    </figure>
+    <ol>
+      <li>β network එකෙන් output එකෙන් කොටසක් ආපහු එනවා:
+        <div class="eq">Vf = β · Vout</div></li>
+      <li>Σ එකේදී Vin සහ Vf එකතු වෙනවා. Amplifier එකට යන්නේ මේ එකතුව:
+        <div class="eq">Amplifier input = Vin + Vf</div></li>
+      <li>Amplifier එක ඒක A වලින් ගුණ කරනවා:
+        <div class="eq">Vout = A (Vin + Vf) = A·Vin + Aβ·Vout</div></li>
+      <li>Vout තියෙන පද එක පැත්තකට ගන්න:
+        <div class="eq">Vout − Aβ·Vout = A·Vin<br>Vout (1 − Aβ) = A·Vin</div></li>
+      <li>එතකොට <span class="t">closed-loop gain</span> <span class="g">(feedback එකත් එක්ක මුළු circuit එකේ gain එක)</span>:
+        <div class="eq" style="font-size:18px;color:var(--amber)">Af = Vout / Vin = A / (1 − Aβ)</div></li>
+    </ol>
+    <p><span class="t">Aβ</span> ට කියන්නේ <span class="t">loop gain</span> <span class="g">(signal එක loop එක වටේ එක වතාවක් ගියාම කී ගුණයක් වෙනවද)</span>. දැන් බලන්න, <b>Aβ = 1</b> වුණොත් පහළ කොටස <span class="m">1 − 1 = 0</span>. බිංදුවෙන් බෙදුවම උත්තරය අනන්තයි (∞).</p>
+    <div class="note">Gain එක අනන්ත කියන්නේ: Vin = 0 වුණත් Vout එකක් තියෙන්න පුළුවන්. ඒ කියන්නේ input එකක් නැතුවම output එකක්. ඒක තමයි oscillator එකේ අර්ථ දැක්වීමම!</div>
+
+    <div class="widget" id="w-af">
+      <p class="wt">Interactive · A සහ β වෙනස් කරලා බලන්න</p>
+      <div class="ctrls cols">
+        <div class="ctrl"><label for="afA">Amplifier gain A <output id="afAo">20</output></label><input type="range" id="afA" min="1" max="100" step="1" value="20"></div>
+        <div class="ctrl"><label for="afB">Feedback β <output id="afBo">0.030</output></label><input type="range" id="afB" min="0" max="0.06" step="0.001" value="0.03"></div>
+      </div>
+      <svg id="afPlot" viewBox="0 0 600 240" role="img" aria-label="Af/A ප්‍රස්ථාරය Aβ ට එදිරිව" style="width:100%;height:auto;background:#05080a;border-radius:8px"></svg>
+      <div class="readout"><span>Aβ = <b id="afAB">0.60</b></span><span>Af = A/(1−Aβ) = <b id="afAf">50</b></span></div>
+      <div class="status" id="afStatus"></div>
+    </div>
+
+    <div class="warn">
+      <p><strong>⚠ සැලකිය යුතුයි:</strong> Slide 3 එකේ <span class="m">Vout = A × Vin</span> සහ <span class="m">Vf = Aβ·Vin</span> කියලා ලියලා තියෙනවා. ඒක හරි යන්නේ signal එක loop එක වටේ <b>පළමු වතාවට</b> යනකොට විතරයි (feedback එක තාම එකතු වෙලා නැති මොහොතේ). ඇත්ත සම්බන්ධය Slide 9 එකේ තියෙන <span class="m">Vout = A(Vin + Vf)</span>. Exam එකේ derivation එකට පාවිච්චි කරන්න ඕනේ මේ දෙවෙනි එක.</p>
+    </div>
+    <p class="cap">සසඳන්න: Negative feedback තිබුණා නම් Σ එකේ ලකුණ − නිසා <span class="m">Af = A / (1 + Aβ)</span>. එතකොට පහළ කොටස කවදාවත් බිංදුව වෙන්නේ නෑ, ඒ නිසා amplifier එක ස්ථාවරයි.</p>
+
+    <div class="practice">
+      <h3>පුහුණු ප්‍රශ්න · 3</h3>
+      <ol class="qs">
+        <li>A = 20, β = 0.03 නම් Af කීයද?</li>
+        <li>A = 10, β = 0.08. Vin = 10 mV නම් Vout කීයද?</li>
+        <li>A = 50 නම් oscillation වෙන්න β කීයක් වෙන්න ඕනෙද?</li>
+      </ol>
+      <details><summary>පිළිතුර 1</summary><div class="ans">
+        <ol><li>Aβ = 20 × 0.03 = 0.6</li>
+        <li>1 − Aβ = 1 − 0.6 = 0.4</li>
+        <li>Af = 20 / 0.4 = <b>50</b></li></ol>
+        <p class="cap">Feedback නැති වෙලාවට වඩා (20) gain එක වැඩියි. Positive feedback gain එක වැඩි කරනවා.</p>
+      </div></details>
+      <details><summary>පිළිතුර 2</summary><div class="ans">
+        <ol><li>Aβ = 10 × 0.08 = 0.8</li>
+        <li>Af = 10 / (1 − 0.8) = 10 / 0.2 = 50</li>
+        <li>Vout = Af × Vin = 50 × 10 mV = <b>500 mV = 0.5 V</b></li></ol>
+        <figure class="fig"><svg viewBox="0 0 560 260" role="img" aria-label="අගයන් සහිත loop එක">
+          <use href="#loop"/>
+          <text x="2" y="80" class="tx-a">10 mV</text>
+          <text x="232" y="160" class="tx-s">β = 0.08</text>
+          <text x="450" y="80" class="tx-a">0.5 V</text>
+          <text x="216" y="30" class="tx-s">A = 10</text>
+          <text x="120" y="252" class="tx-c">Vf = 0.08 × 0.5 = 40 mV</text>
+          <text x="136" y="78" class="tx-a" style="font-size:12px">10+40 = 50 mV</text>
+        </svg><figcaption>පරීක්ෂා කරමු: amplifier input = 50 mV, × 10 = 500 mV. හරි.</figcaption></figure>
+      </div></details>
+      <details><summary>පිළිතුර 3</summary><div class="ans">
+        <ol><li>Oscillation වෙන්න Aβ = 1 වෙන්න ඕනේ.</li>
+        <li>β = 1 / A = 1 / 50 = <b>0.02</b></li></ol>
+      </div></details>
+    </div>
+  </section>
+
+  <!-- ============ 4 ============ -->
+  <section class="topic col" id="loopgain">
+    <div class="sn">04 · Slides 4, 5, 7</div>
+    <h2>Aβ &lt; 1, Aβ &gt; 1, Aβ = 1: මොකද වෙන්නේ?</h2>
+    <p>සරලවම හිතන්න: signal එක loop එක වටේ යන <b>හැම වතාවකම</b> ඒක Aβ වලින් ගුණ වෙනවා. පටන් ගන්න amplitude එක 1 V කියලා හිතමු.</p>
+    <div class="tbl"><table>
+      <tr><th>වට ගණන</th><th>Aβ = 0.9</th><th>Aβ = 1.0</th><th>Aβ = 1.1</th></tr>
+      <tr><td class="mono">0</td><td class="mono">1.00</td><td class="mono">1.00</td><td class="mono">1.00</td></tr>
+      <tr><td class="mono">1</td><td class="mono">0.90</td><td class="mono">1.00</td><td class="mono">1.10</td></tr>
+      <tr><td class="mono">2</td><td class="mono">0.81</td><td class="mono">1.00</td><td class="mono">1.21</td></tr>
+      <tr><td class="mono">10</td><td class="mono">0.35</td><td class="mono">1.00</td><td class="mono">2.59</td></tr>
+      <tr><td class="mono">30</td><td class="mono">0.04</td><td class="mono">1.00</td><td class="mono">17.4</td></tr>
+    </table></div>
+    <div class="minis">
+      <figure><div class="lbl" style="color:var(--amber)">Aβ &lt; 1 · Slide 4</div><canvas class="mini" data-ab="0.93" data-start="kick"></canvas><figcaption class="cap"><span class="t">Damped</span> <span class="g">(ටිකෙන් ටික මැකී යනවා)</span>. අන්තිමට නවතිනවා.</figcaption></figure>
+      <figure><div class="lbl" style="color:var(--coral)">Aβ &gt; 1 · Slide 5</div><canvas class="mini" data-ab="1.06" data-start="small"></canvas><figcaption class="cap">හැම වටයකම ලොකු වෙනවා. Supply එකට වැදුනම උඩ කැපෙනවා.</figcaption></figure>
+      <figure><div class="lbl" style="color:var(--violet)">Aβ = 1 · Slide 7</div><canvas class="mini" data-ab="1" data-start="kick"></canvas><figcaption class="cap"><span class="t">Sustained</span> <span class="g">(එකම ප්‍රමාණයෙන් දිගටම)</span>. Oscillator එකට ඕනේ මේක.</figcaption></figure>
+    </div>
+
+    <div class="widget" id="w-scope">
+      <p class="wt">Interactive · Loop gain එක වෙනස් කරලා output එක බලන්න</p>
+      <div class="ctrls">
+        <div class="ctrl"><label for="abS">Loop gain Aβ <output id="abO">1.00</output></label><input type="range" id="abS" min="0.80" max="1.20" step="0.01" value="1.00"></div>
+        <div class="seg" role="radiogroup" aria-label="පටන් ගන්න විදිය">
+          <label><input type="radio" name="st" id="stKick" value="kick" checked> ලොකු තල්ලුවකින් පටන් ගන්න</label>
+          <label><input type="radio" name="st" id="stNoise" value="noise"> පුංචි noise එකකින් පටන් ගන්න</label>
+        </div>
+        <div class="seg"><label><input type="checkbox" id="realC"> ඇත්ත circuit එකක් වගේ (amplitude එක ලොකු වෙද්දී gain එක තනියම අඩු වෙනවා)</label></div>
+      </div>
+      <canvas id="scope"></canvas>
+      <div class="status" id="scStatus"></div>
+    </div>
+
+    <div class="warn">
+      <p><strong>⚠ සැලකිය යුතුයි:</strong> Slide 5 (Aβ &gt; 1) රූපයේ wave එක දිගටම ලොකු වෙනවා වගේ පෙන්නලා තියෙන්නේ. ඇත්ත circuit එකක output එකට power supply voltage එකට (±Vcc) වඩා යන්න බෑ. ඒ නිසා wave එකේ උඩ සහ පහළ කැපිලා යනවා. මේකට කියන්නේ <span class="t">clipping / saturation</span> <span class="g">(supply එකේ සීමාවට වැදිලා කැපෙන එක)</span>. එතකොට sine wave එක square wave එකක් වගේ <span class="t">distort</span> <span class="g">(හැඩය කැඩෙනවා)</span> වෙනවා. උඩ widget එකේ "ඇත්ත circuit" tick එක නැතුව Aβ = 1.15 දාලා බලන්න.</p>
+      <p>තවත් දෙයක්: Slides 4, 5, 7 වල "Aβ" කියලා ලියලා තියෙන්නේ ඇත්තටම <b>|Aβ|</b> (ප්‍රමාණය). Aβ එකට phase එකකුත් තියෙනවා (5 වෙනි කොටස).</p>
+    </div>
+
+    <div class="practice">
+      <h3>පුහුණු ප්‍රශ්න · 4</h3>
+      <ol class="qs">
+        <li>Aβ = 0.95, පටන් ගන්න amplitude එක 1 V. වට 3 කට පස්සේ amplitude එක කීයද?</li>
+        <li>Aβ = 1.05, පටන් ගන්න amplitude එක 1 mV. 1 V වෙන්න වට කීයක් විතර යනවද?</li>
+        <li>Supply එක ±12 V. Aβ = 1.2 දිගටම තිබුණොත් output wave එකට මොකද වෙන්නේ? රූපයක් අඳින්න.</li>
+      </ol>
+      <details><summary>පිළිතුර 1</summary><div class="ans">
+        <ol><li>හැම වටයකම × 0.95</li>
+        <li>වට 3 කට පස්සේ: 1 × 0.95³ = 1 × 0.857</li>
+        <li>= <b>0.857 V</b> (අඩු වෙනවා, damped)</li></ol>
+      </div></details>
+      <details><summary>පිළිතුර 2</summary><div class="ans">
+        <ol><li>n වටයකට පස්සේ amplitude = 1 mV × 1.05ⁿ</li>
+        <li>1 V වෙන්න: 1.05ⁿ = 1000</li>
+        <li>දෙපැත්තම ln ගන්න: n = ln(1000) / ln(1.05) = 6.908 / 0.0488</li>
+        <li>n ≈ <b>142 වට</b>. 1 kHz oscillator එකක එක වටයක් 1 ms නම්, ඒ කියන්නේ 0.14 s විතරයි. ඒ නිසා oscillator එකක් on කරපු ගමන් වගේ පටන් ගන්නවා.</li></ol>
+      </div></details>
+      <details><summary>පිළිතුර 3</summary><div class="ans">
+        <ol><li>Aβ &gt; 1 නිසා amplitude එක හැම වටයකම ලොකු වෙනවා.</li>
+        <li>±12 V ට වැදුනම ඊට එහාට යන්න බෑ, wave එකේ උඩ සහ පහළ කැපෙනවා (clipping).</li>
+        <li>Output එක sine එකක් නෙවෙයි, square එකක් වගේ හැඩයක්. ඒ නිසා පිරිසිදු sine wave oscillator එකකට අවසානයේ Aβ = 1 වෙන්නම ඕනේ.</li></ol>
+        <figure class="fig"><svg viewBox="0 0 520 150" role="img" aria-label="clipping වුණු wave එක">
+          <line x1="10" y1="35" x2="510" y2="35" class="s-line s-dash"/><line x1="10" y1="115" x2="510" y2="115" class="s-line s-dash"/>
+          <text x="12" y="28" class="tx-s">+12 V</text><text x="12" y="136" class="tx-s">−12 V</text>
+          <path class="s-cor" data-sine="60,75,440,70,3,0" data-clip="40"/>
+        </svg><figcaption>උඩ සහ පහළ පැතලි වෙලා: මේක තමයි clipping.</figcaption></figure>
+      </div></details>
+    </div>
+  </section>
+
+  <!-- ============ 5 ============ -->
+  <section class="topic col" id="barkhausen">
+    <div class="sn">05 · Slides 6 සහ 9</div>
+    <h2>Barkhausen Criteria: Oscillation වෙන්න කොන්දේසි දෙක</h2>
+    <p>Oscillator එකක් දිගටම එකම ප්‍රමාණයෙන් oscillate වෙන්න, loop gain එක Aβ ගැන කොන්දේසි <b>දෙකම</b> එකවර සපුරන්න ඕනේ. මේවට කියන්නේ <span class="t">Barkhausen criteria</span>:</p>
+    <div class="two">
+      <div class="eq" style="white-space:normal;font-size:20px;color:var(--amber)">|Aβ| = 1<div class="c">1. ප්‍රමාණය (magnitude): loop එක වටේ ගිහින් ආපහු එනකොට wave එක ලොකුත් නෑ, පුංචිත් නෑ. හරියටම පටන් ගත්ත ප්‍රමාණයමයි.</div></div>
+      <div class="eq" style="white-space:normal;font-size:20px;color:var(--cyan)">∠Aβ = 0° හෝ 360°<div class="c">2. Phase: ආපහු එන wave එකේ peaks, දැනට තියෙන wave එකේ peaks එක්කම එකට එන්න ඕනේ.</div></div>
+    </div>
+
+    <h3>Phase කොන්දේසිය ඇයි ඕනේ?</h3>
+    <p><span class="t">Phase</span> <span class="g">(wave එකේ peak එක එන වෙලාව, ඉස්සරහට හෝ පස්සට කොච්චර තල්ලු වෙලාද)</span>. ආපහු එන wave එක, දැනට තියෙන wave එක එක්ක <b>එකම වෙලාවට උඩට, එකම වෙලාවට පහළට</b> යනවා නම් ඒවා එකතු වෙලා එකිනෙකට උදව් කරනවා. 180° කින් වෙනස් නම් එකක් උඩට යනකොට අනික පහළට යනවා, එතකොට එකිනෙක කපා හරිනවා.</p>
+    <div class="two">
+      <figure class="fig" style="margin:0"><svg viewBox="0 0 300 150" role="img" aria-label="phase 0: waves එකතු වෙනවා">
+        <path class="s-sig" data-sine="10,75,280,30,2,0"/>
+        <path class="s-fb s-dash" data-sine="10,75,280,30,2,0"/>
+        <text x="10" y="22" class="tx" style="fill:var(--good)">0° / 360°: එකතු වෙනවා ✓</text>
+      </svg></figure>
+      <figure class="fig" style="margin:0"><svg viewBox="0 0 300 150" role="img" aria-label="phase 180: waves කැපී යනවා">
+        <path class="s-sig" data-sine="10,75,280,30,2,0"/>
+        <path class="s-fb s-dash" data-sine="10,75,280,30,2,180"/>
+        <text x="10" y="22" class="tx" style="fill:var(--coral)">180°: කපා හරිනවා ✗</text>
+      </svg></figure>
+    </div>
+
+    <div class="widget" id="w-bk">
+      <p class="wt">Interactive · Barkhausen criteria පරීක්ෂා කරන්න</p>
+      <div class="ctrls cols">
+        <div class="ctrl"><label for="bkM">|Aβ| <output id="bkMo">0.70</output></label><input type="range" id="bkM" min="0.5" max="1.5" step="0.01" value="0.70"></div>
+        <div class="ctrl"><label for="bkP">Loop එකේ මුළු phase shift ∠Aβ <output id="bkPo">90°</output></label><input type="range" id="bkP" min="0" max="360" step="5" value="90"></div>
+      </div>
+      <canvas id="bk"></canvas>
+      <div class="cap">කහ: දැනට amplifier input එකේ තියෙන wave එක. නිල් (ඉරි): loop එක වටේ ගිහින් ආපහු ආව wave එක.</div>
+      <div class="chips"><span class="chip" id="bkC1">|Aβ| = 1</span><span class="chip" id="bkC2">∠Aβ = 0° / 360°</span></div>
+      <div class="status" id="bkStatus"></div>
+    </div>
+
+    <h3>Phase එක 360° කරගන්නේ කොහොමද?</h3>
+    <p>බොහෝ oscillators වල තියෙන්නේ <span class="t">inverting amplifier</span> <span class="g">(output එක input එකට උඩු යටිකුරු කරන amplifier)</span> එකක්. ඒකෙන් 180° phase shift එකක් දෙනවා. ඉතින් β network එකෙන් තවත් 180° දුන්නොත් මුළු එක 360° වෙනවා. 360° කියන්නේ සම්පූර්ණ වටයක් ගිහින් ආපහු පටන් ගත්ත තැනටම ආවා වගේ, ඒ නිසා 0° ට සමානයි.</p>
+    <figure class="fig">
+      <svg viewBox="0 0 600 170" role="img" aria-label="Amplifier 180, beta 180, එකතුව 360">
+        <path d="M40 40 L40 120 L120 80Z" class="s-main" style="fill:var(--panel2)"/>
+        <text x="50" y="86" class="tx-m">−A</text>
+        <text x="20" y="150" class="tx-s">Inverting amp: 180°</text>
+        <line x1="124" y1="80" x2="200" y2="80" class="s-line" marker-end="url(#arr)"/>
+        <rect x="204" y="50" width="130" height="60" rx="6" class="s-fb" style="fill:var(--panel2)"/>
+        <text x="269" y="86" text-anchor="middle" class="tx-c">β</text>
+        <text x="200" y="150" class="tx-s">β network: 180° (f₀ දී)</text>
+        <line x1="338" y1="80" x2="400" y2="80" class="s-line" marker-end="url(#arr)"/>
+        <text x="410" y="74" class="tx-a">180° + 180°</text>
+        <text x="410" y="100" class="tx-a">= 360° ≡ 0° ✓</text>
+      </svg>
+    </figure>
+    <p>β network එක resistors, capacitors හෝ inductors වලින් හදන නිසා, ඒකෙන් දෙන phase shift එක frequency එක අනුව වෙනස් වෙනවා. ඉතින් හරියටම 360° ලැබෙන්නේ <b>එක frequency එකකදී විතරයි</b>. ඒ frequency එකට කියන්නේ <span class="t">f₀</span> <span class="g">(oscillation frequency, oscillator එක වැඩ කරන frequency එක)</span>.</p>
+
+    <div class="warn">
+      <p><strong>⚠ සැලකිය යුතුයි:</strong> Slide 6 එකේ <span class="m">∠Aβ = 0</span> කියලා විතරයි ලියලා තියෙන්නේ (ඒකකයකුත් නෑ). සම්පූර්ණ කොන්දේසිය <b>∠Aβ = 0° හෝ 360° (n × 360°)</b>. Inverting amplifier එකක් තියෙන circuits වල (RC phase shift oscillator වගේ) exam එකේ ලියන්නේ 360° කියලා. Slide 9 එකේ "0°" කියලා ඒකකය එක්ක හරියට ලියලා තියෙනවා.</p>
+    </div>
+
+    <div class="practice">
+      <h3>පුහුණු ප්‍රශ්න · 5</h3>
+      <ol class="qs">
+        <li>Amplifier එකක් 180° phase shift එකක් දෙනවා. Oscillation වෙන්න β network එකෙන් කීයක phase shift එකක් දෙන්න ඕනෙද?</li>
+        <li>|A| = 29 inverting amplifier එකක් තියෙනවා. Barkhausen magnitude කොන්දේසියට |β| කීයද?</li>
+        <li>|Aβ| = 1, නමුත් loop එකේ මුළු phase shift එක 270°. මේ circuit එක oscillate වෙනවද?</li>
+      </ol>
+      <details><summary>පිළිතුර 1</summary><div class="ans">
+        <ol><li>මුළු phase shift = amplifier + β = 360° වෙන්න ඕනේ.</li>
+        <li>β phase = 360° − 180° = <b>180°</b></li></ol>
+      </div></details>
+      <details><summary>පිළිතුර 2</summary><div class="ans">
+        <ol><li>|Aβ| = 1 නිසා |β| = 1 / |A|</li>
+        <li>|β| = 1 / 29 ≈ <b>0.0345</b></li>
+        <li>(ඉදිරි පාඩමේ RC phase shift oscillator එකේ මේ "29" අගය නැවත හම්බ වෙනවා.)</li></ol>
+      </div></details>
+      <details><summary>පිළිතුර 3</summary><div class="ans">
+        <ol><li>Magnitude කොන්දේසිය හරි, නමුත් phase එක 0° / 360° නෙවෙයි.</li>
+        <li>ආපහු එන wave එක 270° කින් පස්සට ගිහින් එනවා, ඒ නිසා peaks එකට එන්නේ නෑ, හරියට එකතු වෙන්නේ නෑ.</li>
+        <li>උත්තරය: <b>නෑ</b>, මේ frequency එකේ sustained oscillation එකක් නෑ. කොන්දේසි දෙකම එකවර සපුරන්න ඕනේ.</li></ol>
+        <figure class="fig"><svg viewBox="0 0 300 140" role="img" aria-label="270 phase වෙනස">
+          <path class="s-sig" data-sine="10,70,280,30,2,0"/>
+          <path class="s-fb s-dash" data-sine="10,70,280,30,2,270"/>
+          <text x="10" y="20" class="tx" style="fill:var(--coral)">270°: peaks එකට එන්නේ නෑ</text>
+        </svg></figure>
+      </div></details>
+    </div>
+  </section>
+
+  <!-- ============ 6 ============ -->
+  <section class="topic col" id="startup">
+    <div class="sn">06 · Slides 8 සහ 9</div>
+    <h2>Input එකක් නැතුව oscillation එක පටන් ගන්නේ කොහොමද?</h2>
+    <p>Oscillator එකේ <span class="m">Vin ≈ 0</span>. එහෙනම් පළමු signal එක එන්නේ කොහෙන්ද? උත්තරය <span class="t">thermal noise</span> <span class="g">(resistors ඇතුලේ electrons රස්නය නිසා අහඹු ලෙස සෙලවීමෙන් හැදෙන ඉතා පුංචි voltage එක, µV වගේ)</span>.</p>
+    <ol>
+      <li><b>Switch on කරනවා.</b> Circuit එකේ resistors වල thermal noise එකක් හැදෙනවා. මේ noise එකේ <b>හැම frequency එකක්ම</b> ටික ටික තියෙනවා.</li>
+      <li><b>β network එක පෙරනයක් (filter) වගේ.</b> ඒක <span class="t">frequency selective</span> <span class="g">(එක frequency එකකට විතරක් හරි phase එක දෙන)</span>. Barkhausen කොන්දේසි සපුරන්නේ f₀ ට විතරයි.</li>
+      <li><b>f₀ ලොකු වෙනවා, අනිත් ඒවා මැකෙනවා.</b> f₀ හැර අනිත් frequencies වල phase එක වැරදියි හෝ |Aβ| &lt; 1. ඒවා මැකිලා යනවා. f₀ එක විතරක් වටෙන් වට ලොකු වෙනවා.</li>
+      <li><b>ස්ථාවර වෙනවා.</b> Amplitude එක ලොකු වෙද්දී amplifier gain එක ටිකක් අඩු වෙලා |Aβ| = 1 වෙනවා. එතකොට පිරිසිදු sine wave එකක් එකම ප්‍රමාණයෙන්.</li>
+    </ol>
+    <figure class="fig">
+      <svg viewBox="0 0 640 210" role="img" aria-label="noise එකේ හැම frequency එකක්ම, β filter එකෙන් පස්සේ f0 විතරයි">
+        <text x="10" y="20" class="tx-s">Thermal noise: හැම frequency එකක්ම</text>
+        <line x1="10" y1="160" x2="240" y2="160" class="s-line"/>
+        <g id="noiseBars"></g>
+        <text x="200" y="182" class="tx-s">f →</text>
+        <line x1="252" y1="110" x2="300" y2="110" class="s-line" marker-end="url(#arr)"/>
+        <rect x="304" y="80" width="90" height="60" rx="6" class="s-fb" style="fill:var(--panel2)"/>
+        <text x="349" y="116" text-anchor="middle" class="tx-c">β filter</text>
+        <line x1="398" y1="110" x2="446" y2="110" class="s-line" marker-end="url(#arr)"/>
+        <text x="410" y="20" class="tx-s">f₀ විතරක් ඉතුරු වෙනවා</text>
+        <line x1="410" y1="160" x2="630" y2="160" class="s-line"/>
+        <g id="f0Bars"></g>
+        <text x="514" y="182" class="tx-a">f₀</text>
+      </svg>
+    </figure>
+    <figure class="fig">
+      <canvas class="mini" id="startupCanvas" style="height:140px"></canvas>
+      <figcaption>පටන් ගැනීමේ කාල රේඛාව: noise (පුංචියි) → |Aβ| &gt; 1 නිසා ලොකු වෙනවා → gain එක අඩු වෙලා |Aβ| = 1 → ස්ථාවර sine wave එක.</figcaption>
+    </figure>
+
+    <div class="warn">
+      <p><strong>⚠ සැලකිය යුතුයි:</strong> Slides 6, 7 බැලුවම හිතෙන්නේ මුල ඉඳන්ම |Aβ| = 1 කියලා. Slide 7 රූපයේ wave එක මුල් මොහොතේ ඉඳන්ම සම්පූර්ණ ප්‍රමාණයෙන් තියෙනවා. ඒත් noise එක වගේ ඉතා පුංචි signal එකකින් පටන් ගත්තොත් හරියටම |Aβ| = 1 නම් ඒක <b>පුංචිම තමයි ඉන්නේ</b>, කවදාවත් ලොකු වෙන්නේ නෑ. ඒ නිසා:</p>
+      <p>• <b>පටන් ගන්න කොට</b> |Aβ| ටිකක් <b>1ට වැඩි</b> වෙන්න ඕනේ (උදා: 1.05 විතර). එතකොට තමයි noise එක ලොකු වෙන්නේ.<br>• <b>ස්ථාවර වුණාට පස්සේ</b> |Aβ| = 1 වෙන්න ඕනේ. Amplifier එකේ <span class="t">non-linearity</span> <span class="g">(ලොකු signals වලදී gain එක තනියම අඩු වෙන ගතිය)</span> හෝ AGC circuit එකකින් මේක තනියම වෙනවා.</p>
+      <p>4 වෙනි කොටසේ widget එකේ "පුංචි noise එකකින්" තෝරලා Aβ = 1.00 දාලා බලන්න. ඊට පස්සේ "ඇත්ත circuit" tick කරලා Aβ = 1.05 දාන්න.</p>
+    </div>
+
+    <div class="practice">
+      <h3>පුහුණු ප්‍රශ්න · 6</h3>
+      <ol class="qs">
+        <li>Vin ≈ 0 වුණත් oscillator එකේ output එකක් එන්නේ ඇයි?</li>
+        <li>Oscillator එකේ frequency එක තීරණය කරන්නේ circuit එකේ කුමන කොටසද?</li>
+        <li>Designer කෙනෙක් හරියටම |Aβ| = 1.000 වෙන්න circuit එක හැදුවා. Switch on කළාම oscillation එකක් ආවේ නෑ. ඇයි? විසඳුම මොකක්ද?</li>
+      </ol>
+      <details><summary>පිළිතුර 1</summary><div class="ans">
+        <ol><li>Switch on කරපු ගමන් resistors වල thermal noise එකක් හැදෙනවා. ඒක තමයි පළමු "input" එක.</li>
+        <li>Positive feedback සහ |Aβ| &gt; 1 නිසා ඒ noise එකේ f₀ කොටස වටෙන් වට ලොකු වෙනවා.</li>
+        <li>අන්තිමට |Aβ| = 1 වෙලා ස්ථාවර output එකක් ලැබෙනවා. Formula එකෙන්: Aβ = 1 නම් Af = ∞, ඉතින් Vin ≈ 0 වුණත් Vout ≠ 0.</li></ol>
+      </div></details>
+      <details><summary>පිළිතුර 2</summary><div class="ans">
+        <p><b>β network එක</b> (feedback network එක). ඒක frequency selective නිසා, මුළු loop phase එක 0° / 360° වෙන්නේ එක frequency එකකට විතරයි. ඒ f₀.</p>
+      </div></details>
+      <details><summary>පිළිතුර 3</summary><div class="ans">
+        <ol><li>Noise එක ඉතා පුංචියි (µV). |Aβ| = 1 නම් හැම වටයකම ඒක × 1 වෙනවා, ඒ කියන්නේ කිසිම වෙනසක් නෑ.</li>
+        <li>ඉතින් output එක noise මට්ටමේම ඉන්නවා. පේන්න තරම් oscillation එකක් නෑ.</li>
+        <li>විසඳුම: පටන් ගන්න |Aβ| ටිකක් 1ට වැඩි කරන්න (උදා: A ටිකක් වැඩි කරන්න). Amplitude එක ලොකු වුණාම amplifier එකේ non-linearity එකෙන් gain එක අඩු වෙලා |Aβ| = 1 ට එනවා.</li></ol>
+        <figure class="fig"><svg viewBox="0 0 520 120" role="img" aria-label="Aβ = 1 නම් noise එක පුංචිම; 1ට වැඩි නම් ලොකු වෙනවා">
+          <line x1="10" y1="40" x2="510" y2="40" class="s-line"/><line x1="10" y1="95" x2="510" y2="95" class="s-line"/>
+          <path class="s-vio" data-sine="20,40,490,2,14,0"/>
+          <text x="20" y="18" class="tx-s">|Aβ| = 1.000 : noise එක පුංචිම</text>
+          <path class="s-sig" data-sine="20,95,490,18,14,0" data-grow="0.06"/>
+          <text x="20" y="74" class="tx-s">|Aβ| ≈ 1.05 : ලොකු වෙලා පස්සේ ස්ථාවර වෙනවා</text>
+        </svg></figure>
+      </div></details>
+    </div>
+  </section>
+
+  <!-- ============ 7 ============ -->
+  <section class="topic col" id="types">
+    <div class="sn">07 · Slide 10</div>
+    <h2>Oscillator වර්ග</h2>
+    <p>Output wave එකේ හැඩය අනුව oscillators ප්‍රධාන කොටස් දෙකකට බෙදනවා.</p>
+    <figure class="fig">
+      <svg viewBox="0 0 660 330" role="img" aria-label="Oscillator වර්ග ගස">
+        <rect x="250" y="10" width="160" height="40" rx="8" class="s-main" style="fill:var(--panel2)"/>
+        <text x="330" y="36" text-anchor="middle" class="tx">Oscillators</text>
+        <polyline points="330,50 330,70 165,70 165,90" class="s-line"/>
+        <polyline points="330,70 500,70 500,90" class="s-line"/>
+        <rect x="70" y="90" width="190" height="56" rx="8" class="s-sig" style="fill:var(--panel2)"/>
+        <text x="165" y="114" text-anchor="middle" class="tx">Sinusoidal</text>
+        <path class="s-sig" data-sine="125,132,80,6,2,0" style="stroke-width:1.6"/>
+        <rect x="400" y="90" width="200" height="56" rx="8" class="s-cor" style="fill:var(--panel2)"/>
+        <text x="500" y="114" text-anchor="middle" class="tx">Non-sinusoidal</text>
+        <path d="M460 138 h12 v-12 h12 v12 h12 v-12 h12 v12 h12 v-12 h12" class="s-cor" style="stroke-width:1.6"/>
+        <polyline points="165,146 165,170" class="s-line"/>
+        <polyline points="35,170 295,170" class="s-line"/>
+        <polyline points="35,170 35,190" class="s-line"/><polyline points="165,170 165,190" class="s-line"/><polyline points="295,170 295,190" class="s-line"/>
+        <rect x="0" y="190" width="70" height="40" rx="6" class="s-line" style="fill:var(--panel)"/>
+        <text x="35" y="215" text-anchor="middle" class="tx-m">RC</text>
+        <rect x="125" y="190" width="80" height="40" rx="6" class="s-line" style="fill:var(--panel)"/>
+        <text x="165" y="215" text-anchor="middle" class="tx-m">LC</text>
+        <rect x="245" y="190" width="100" height="40" rx="6" class="s-line" style="fill:var(--panel)"/>
+        <text x="295" y="215" text-anchor="middle" class="tx-m">Crystal</text>
+        <text x="5" y="252" class="tx-s">Hz–~1 MHz</text>
+        <text x="130" y="252" class="tx-s">~100 kHz–GHz</text>
+        <text x="250" y="252" class="tx-s">ඉතා ස්ථාවරයි</text>
+        <polyline points="500,146 500,190" class="s-line"/>
+        <rect x="420" y="190" width="160" height="40" rx="6" class="s-line" style="fill:var(--panel)"/>
+        <text x="500" y="215" text-anchor="middle" class="tx-m">Relaxation</text>
+        <polyline points="500,230 500,262" class="s-line"/>
+        <rect x="430" y="262" width="140" height="40" rx="6" class="s-line" style="fill:var(--panel)"/>
+        <text x="500" y="287" text-anchor="middle" class="tx-m">e.g. 555 Timer</text>
+      </svg>
+      <figcaption>Slide 10 එකේ ගස, 555 timer එක හරි තැනට දාලා.</figcaption>
+    </figure>
+
+    <h3>1. Sinusoidal oscillators <span class="g" style="font-weight:400">(sine wave එකක් දෙන)</span></h3>
+    <div class="tbl"><table>
+      <tr><th>වර්ගය</th><th>β network එක හදලා තියෙන්නේ</th><th>සාමාන්‍ය frequency</th><th>උදාහරණ</th></tr>
+      <tr><td><b>RC oscillator</b></td><td>Resistors (R) සහ capacitors (C)</td><td>අඩු frequency, audio range</td><td>RC phase shift, Wien bridge</td></tr>
+      <tr><td><b>LC oscillator</b></td><td>Inductor (L) සහ capacitor (C), <span class="t">tank circuit</span> <span class="g">(energy එක L සහ C අතර මාරු වෙවී පැද්දෙන circuit එක)</span></td><td>ඉහළ frequency, radio</td><td>Colpitts, Hartley</td></tr>
+      <tr><td><b>Crystal oscillator</b></td><td>Quartz crystal එකක් <span class="g">(voltage දුන්නම එක නියම වේගයකින් කම්පනය වෙන ගල් කැබැල්ලක්)</span></td><td>kHz සිට MHz දශක කිහිපයක් දක්වා</td><td>ඔරලෝසුව (32.768 kHz), microcontroller clock</td></tr>
+    </table></div>
+    <p>Crystal oscillators තමයි වැඩියෙන්ම ස්ථාවර (frequency එක වෙනස් නොවී තියෙන). ඒ නිසා ඔරලෝසු, computers, phones වල පාවිච්චි කරනවා.</p>
+
+    <h3>2. Non-sinusoidal oscillators <span class="g" style="font-weight:400">(sine නොවන square, triangle, sawtooth waves)</span></h3>
+    <p><span class="t">Relaxation oscillator</span> <span class="g">(capacitor එකක් charge වෙලා, එක පාරටම discharge වෙලා, ආයේ charge වෙන චක්‍රයක් දිගටම යන circuit එක)</span>. මේවා Barkhausen sine විදියට නෙවෙයි, charge / discharge කාලය අනුව වැඩ කරන්නේ.</p>
+    <figure class="fig">
+      <svg viewBox="0 0 600 130" role="img" aria-label="square, triangle, sawtooth">
+        <text x="10" y="20" class="tx-s">Square</text>
+        <path d="M10 95 h30 v-50 h30 v50 h30 v-50 h30 v50 h30" class="s-cor"/>
+        <text x="210" y="20" class="tx-s">Triangle</text>
+        <path d="M210 95 l30 -50 l30 50 l30 -50 l30 50 l30 -50" class="s-cor"/>
+        <text x="410" y="20" class="tx-s">Sawtooth</text>
+        <path d="M410 95 l50 -50 v50 l50 -50 v50 l50 -50 v50" class="s-cor"/>
+      </svg>
+    </figure>
+    <p><span class="t">555 Timer</span> <span class="g">(ගොඩක් ජනප්‍රිය timer IC එකක්)</span> එක <span class="t">astable mode</span> <span class="g">(නවතින්නේ නැතුව දිගටම on/off වෙන ක්‍රමය)</span> එකට සම්බන්ධ කළාම square wave දෙන relaxation oscillator එකක් වෙනවා. LED blinkers, buzzers, clock pulses වලට පාවිච්චි කරනවා.</p>
+
+    <div class="warn">
+      <p><strong>⚠ සැලකිය යුතුයි:</strong> Slide 10 එකේ "555 Timer" කිසිම කාණ්ඩයකට ඉරකින් සම්බන්ධ කරලා නෑ, තනියම තියෙන්නේ. 555 timer එක වෙනම oscillator වර්ගයක් නෙවෙයි. ඒක relaxation oscillator එකක් <b>හදන්න පාවිච්චි කරන IC එකක්</b>. ඒ නිසා ඒක යන්නේ <b>Non-sinusoidal</b> කාණ්ඩයට.</p>
+    </div>
+
+    <div class="practice">
+      <h3>පුහුණු ප්‍රශ්න · 7</h3>
+      <ol class="qs">
+        <li>මේවා කුමන oscillator වර්ගයටද? (a) Quartz ඔරලෝසුව (b) 555 LED blinker (c) Audio signal generator එකක 1 kHz sine wave</li>
+        <li>Frequency එක වඩාත්ම ස්ථාවර වෙන්න ඕනේ නම් තෝරන්නේ කුමන oscillator වර්ගයද?</li>
+        <li>(පෙරදසුන) LC tank එකක f₀ = 1 / (2π√LC). L = 10 µH, C = 100 pF නම් f₀ කීයද?</li>
+      </ol>
+      <details><summary>පිළිතුර 1</summary><div class="ans">
+        <ol><li>(a) Crystal oscillator (sinusoidal)</li>
+        <li>(b) Relaxation oscillator (non-sinusoidal, square wave)</li>
+        <li>(c) RC oscillator (sinusoidal, අඩු frequency නිසා RC හොඳයි)</li></ol>
+      </div></details>
+      <details><summary>පිළිතුර 2</summary><div class="ans">
+        <p><b>Crystal oscillator.</b> Quartz crystal එක කම්පනය වෙන frequency එක ඉතා නියමයි, උෂ්ණත්වය එක්කවත් ලොකුවට වෙනස් වෙන්නේ නෑ.</p>
+      </div></details>
+      <details><summary>පිළිතුර 3</summary><div class="ans">
+        <ol><li>LC = 10 × 10⁻⁶ × 100 × 10⁻¹² = 1 × 10⁻¹⁵</li>
+        <li>√LC = √(10⁻¹⁵) = 3.162 × 10⁻⁸</li>
+        <li>2π√LC = 6.283 × 3.162 × 10⁻⁸ = 1.987 × 10⁻⁷</li>
+        <li>f₀ = 1 / 1.987 × 10⁻⁷ ≈ <b>5.03 MHz</b></li></ol>
+        <figure class="fig"><svg viewBox="0 0 360 150" role="img" aria-label="LC tank circuit">
+          <line x1="60" y1="30" x2="300" y2="30" class="s-main"/><line x1="60" y1="120" x2="300" y2="120" class="s-main"/>
+          <line x1="100" y1="30" x2="100" y2="50" class="s-main"/>
+          <path d="M100 50 c18 0 18 14 0 14 c18 0 18 14 0 14 c18 0 18 14 0 14 c18 0 18 14 0 14" class="s-sig"/>
+          <line x1="100" y1="106" x2="100" y2="120" class="s-main"/>
+          <text x="124" y="82" class="tx-a">L = 10 µH</text>
+          <line x1="260" y1="30" x2="260" y2="68" class="s-main"/><line x1="240" y1="68" x2="280" y2="68" class="s-fb" style="stroke-width:3"/>
+          <line x1="240" y1="80" x2="280" y2="80" class="s-fb" style="stroke-width:3"/><line x1="260" y1="80" x2="260" y2="120" class="s-main"/>
+          <text x="180" y="146" class="tx-c">C = 100 pF</text>
+        </svg><figcaption>Energy එක L සහ C අතර එහාට මෙහාට යනවා. ඒ පැද්දීමේ frequency එක තමයි f₀.</figcaption></figure>
+      </div></details>
+    </div>
+  </section>
+
+  <!-- ============ formulas ============ -->
+  <section class="topic col summary" id="formulas">
+    <div class="sn">සාරාංශය</div>
+    <h2>සූත්‍ර සාරාංශය</h2>
+    <div class="tbl"><table>
+      <tr><th>මොකටද</th><th>සූත්‍රය</th><th>මතක තියාගන්න</th></tr>
+      <tr><td>Period සහ frequency</td><td class="mono">T = 1/f</td><td>f වැඩි නම් T අඩුයි</td></tr>
+      <tr><td>Feedback කොටස</td><td class="mono">Vf = β·Vout</td><td>β = output එකෙන් ආපහු යන කොටස</td></tr>
+      <tr><td>Amplifier output</td><td class="mono">Vout = A(Vin + Vf)</td><td>Positive feedback: Σ එකේ + / +</td></tr>
+      <tr><td>Positive feedback gain</td><td class="mono">Af = A / (1 − Aβ)</td><td>Aβ → 1 නම් Af → ∞</td></tr>
+      <tr><td>Negative feedback gain (සසඳන්න)</td><td class="mono">Af = A / (1 + Aβ)</td><td>ස්ථාවර amplifiers</td></tr>
+      <tr><td>Loop gain</td><td class="mono">Aβ</td><td>&lt;1 මැකෙනවා · &gt;1 ලොකු වෙනවා · =1 දිගටම</td></tr>
+      <tr><td>Barkhausen 1 (magnitude)</td><td class="mono">|Aβ| = 1</td><td>පටන් ගන්න ටිකක් &gt; 1, පස්සේ = 1</td></tr>
+      <tr><td>Barkhausen 2 (phase)</td><td class="mono">∠Aβ = 0° හෝ 360°</td><td>Inverting amp 180° + β 180°</td></tr>
+      <tr><td>Oscillation β (දන්නා A එකට)</td><td class="mono">β = 1/A</td><td>උදා: A = 50 → β = 0.02</td></tr>
+      <tr><td>n වටයකට පස්සේ amplitude</td><td class="mono">Vn = V0·(Aβ)ⁿ</td><td>පටන් ගැනීමේ කාලය හොයන්න</td></tr>
+      <tr><td>LC tank (පෙරදසුන)</td><td class="mono">f₀ = 1 / (2π√LC)</td><td>ඊළඟ පාඩම් වල</td></tr>
+    </table></div>
+    <footer>පාඩම පදනම් කරගත්තේ "Oscillators Introduction" slides 10 මත. ⚠ ලකුණු කරපු තැන් 6ක් slides වල නිවැරදි කළ යුතු හෝ පැහැදිලි කළ යුතු තැන්.</footer>
+  </section>
+  </main>
+</div>
+
+<script>
+(function(){
+  "use strict";
+  var NS="http://www.w3.org/2000/svg";
+  // sine paths: data-sine="x0,yMid,width,amp,cycles,phaseDeg"
+  function sinePath(x0,y0,w,amp,cyc,ph,clip,grow){
+    var n=Math.max(120,Math.round(cyc*60)),d="",phr=ph*Math.PI/180;
+    for(var i=0;i<=n;i++){
+      var u=i/n,x=x0+u*w,a=amp;
+      if(grow) a=amp*Math.min(1,0.08+Math.pow(u*1.8,3));
+      var y=a*Math.sin(2*Math.PI*cyc*u-phr);
+      if(clip!=null) y=Math.max(-clip,Math.min(clip,y));
+      d+=(i?"L":"M")+x.toFixed(1)+" "+(y0-y).toFixed(1);
+    }
+    return d;
+  }
+  document.querySelectorAll("path[data-sine]").forEach(function(p){
+    var v=p.getAttribute("data-sine").split(",").map(Number);
+    var clip=p.hasAttribute("data-clip")?Number(p.getAttribute("data-clip")):null;
+    p.setAttribute("d",sinePath(v[0],v[1],v[2],v[3],v[4],v[5],clip,p.hasAttribute("data-grow")));
+  });
+  // scope grid in hero
+  var g=document.getElementById("scopegrid");
+  for(var x=0;x<=720;x+=72){var l=document.createElementNS(NS,"line");l.setAttribute("x1",x);l.setAttribute("x2",x);l.setAttribute("y1",0);l.setAttribute("y2",200);g.appendChild(l);}
+  for(var y=0;y<=200;y+=40){var l2=document.createElementNS(NS,"line");l2.setAttribute("x1",0);l2.setAttribute("x2",720);l2.setAttribute("y1",y);l2.setAttribute("y2",y);g.appendChild(l2);}
+  // noise spectrum bars
+  function bars(id,x0,f0Only){
+    var host=document.getElementById(id),seed=7;
+    function rnd(){seed=(seed*9301+49297)%233280;return seed/233280;}
+    for(var i=0;i<22;i++){
+      var h=f0Only?(i===10?110:3):(18+rnd()*30);
+      var r=document.createElementNS(NS,"rect");
+      r.setAttribute("x",x0+i*10);r.setAttribute("y",160-h);r.setAttribute("width",6);r.setAttribute("height",h);
+      r.setAttribute("class",f0Only&&i===10?"f-amber":"f-muted");host.appendChild(r);
+    }
+  }
+  bars("noiseBars",14,false);bars("f0Bars",414,true);
+
+  var C={amber:"#f1b34f",cyan:"#6cc4d6",coral:"#ef8a6c",violet:"#b8a2f2",grid:"#16231f",rail:"#5a4a3a",fg:"#dfe6ea",muted:"#93a2ad"};
+  function fit(cv){
+    var dpr=window.devicePixelRatio||1,w=cv.clientWidth||300,h=cv.clientHeight||150;
+    cv.width=Math.round(w*dpr);cv.height=Math.round(h*dpr);
+    var ctx=cv.getContext("2d");ctx.setTransform(dpr,0,0,dpr,0,0);return {ctx:ctx,w:w,h:h};
+  }
+  function grid(ctx,w,h){
+    ctx.strokeStyle=C.grid;ctx.lineWidth=1;
+    for(var i=1;i<10;i++){ctx.beginPath();ctx.moveTo(w*i/10,0);ctx.lineTo(w*i/10,h);ctx.stroke();}
+    for(var j=1;j<6;j++){ctx.beginPath();ctx.moveTo(0,h*j/6);ctx.lineTo(w,h*j/6);ctx.stroke();}
+  }
+  // amplitude per trip around the loop
+  function simulate(ab,start,real,cycles){
+    var a=[start==="kick"?0.9:(start==="small"?0.08:0.012)];
+    for(var n=0;n<cycles;n++){
+      var cur=a[n],next;
+      if(real&&ab>1){next=cur*ab/(1+(ab-1)*Math.pow(cur/0.7,2));}
+      else next=cur*ab;
+      a.push(Math.min(next,50));
+    }
+    return a;
+  }
+  function drawScope(cv,ab,start,real,cycles,color){
+    var f=fit(cv),ctx=f.ctx,w=f.w,h=f.h,mid=h/2,scale=h/2/1.18;
+    ctx.clearRect(0,0,w,h);grid(ctx,w,h);
+    ctx.setLineDash([5,5]);ctx.strokeStyle=C.rail;
+    [mid-scale,mid+scale].forEach(function(yy){ctx.beginPath();ctx.moveTo(0,yy);ctx.lineTo(w,yy);ctx.stroke();});
+    ctx.setLineDash([]);
+    if(h>160){ctx.fillStyle=C.muted;ctx.font="12px JetBrains Mono, monospace";ctx.fillText("+Vcc",6,mid-scale-5);ctx.fillText("−Vcc",6,mid+scale+14);}
+    var a=simulate(ab,start,real,cycles),spc=Math.max(10,Math.round(w/cycles*1.2)),N=cycles*spc;
+    ctx.strokeStyle=color;ctx.lineWidth=1.6;ctx.beginPath();
+    for(var i=0;i<=N;i++){
+      var t=i/spc,n=Math.min(cycles-1,Math.floor(t)),fr=t-n;
+      var amp=a[n]+(a[n+1]-a[n])*fr;
+      var v=amp*Math.sin(2*Math.PI*t);
+      v=Math.max(-1,Math.min(1,v));
+      var x=i/N*w,y=mid-v*scale;
+      if(i)ctx.lineTo(x,y);else ctx.moveTo(x,y);
+    }
+    ctx.stroke();
+    return a;
+  }
+  function colorFor(ab){return Math.abs(ab-1)<0.005?C.violet:(ab<1?C.amber:C.coral);}
+  function drawMinis(){
+    document.querySelectorAll("canvas.mini[data-ab]").forEach(function(cv){
+      var ab=Number(cv.getAttribute("data-ab"));
+      drawScope(cv,ab,cv.getAttribute("data-start"),false,40,colorFor(ab));
+    });
+    drawScope(document.getElementById("startupCanvas"),1.12,"noise",true,70,C.violet);
+  }
+
+  // widget: loop gain scope
+  var abS=document.getElementById("abS"),abO=document.getElementById("abO"),realC=document.getElementById("realC"),
+      sc=document.getElementById("scope"),scS=document.getElementById("scStatus");
+  function updScope(){
+    var ab=Number(abS.value),start=document.getElementById("stNoise").checked?"noise":"kick",real=realC.checked;
+    abO.textContent=ab.toFixed(2);
+    var a=drawScope(sc,ab,start,real,60,colorFor(ab)),last=a[a.length-1],msg;
+    if(ab<0.995){
+      msg="<b>Aβ &lt; 1</b>: loop එක වටේ යන හැම වතාවකම signal එක "+ab.toFixed(2)+" ගුණයකින් අඩු වෙනවා. ටිකෙන් ටික මැකිලා යනවා (damped).";
+      if(start==="noise")msg+=" Noise එකෙන් පටන් ගත්තොත් oscillation එකක් පේන්නේවත් නෑ.";
+    }else if(ab<1.005){
+      msg="<b>Aβ = 1</b>: ආපහු එන wave එක හරියටම එකම ප්‍රමාණයි. පටන් ගත්ත ප්‍රමාණයෙන්ම දිගටම යනවා (sustained).";
+      if(start==="noise")msg+=" ඒත් බලන්න: noise වගේ පුංචි එකකින් පටන් ගත්තම ඒක පුංචිම තමයි ඉන්නේ. ලොකු වෙන්න නම් මුලින් Aβ ටිකක් 1ට වැඩි වෙන්න ඕනේ.";
+    }else if(real){
+      msg="<b>Aβ &gt; 1 + ඇත්ත circuit</b>: මුලින් ලොකු වෙනවා. Amplitude එක ලොකු වෙද්දී amplifier gain එක තනියම අඩු වෙලා |Aβ| = 1 ට එනවා. ප්‍රතිඵලය: පිරිසිදු, ස්ථාවර sine wave එකක්. හොඳ oscillator එකක් වැඩ කරන්නේ මෙහෙමයි.";
+    }else{
+      msg="<b>Aβ &gt; 1</b>: හැම වටයකම "+ab.toFixed(2)+" ගුණයකින් ලොකු වෙනවා.";
+      msg+= last>1 ? " ±Vcc ඉරි වලට වැදුනම උඩ කැපෙනවා (clipping). Sine එක square වගේ වෙනවා." : " තව ටිකක් වෙලා ගියාම ±Vcc ට වැදිලා කැපෙයි.";
+    }
+    scS.innerHTML=msg;
+  }
+  [abS,realC,document.getElementById("stKick"),document.getElementById("stNoise")].forEach(function(el){el.addEventListener("input",updScope);el.addEventListener("change",updScope);});
+
+  // widget: Af = A/(1-Aβ)
+  var afA=document.getElementById("afA"),afB=document.getElementById("afB"),plot=document.getElementById("afPlot");
+  function updAf(){
+    var A=Number(afA.value),B=Number(afB.value),ab=A*B;
+    document.getElementById("afAo").textContent=A;
+    document.getElementById("afBo").textContent=B.toFixed(3);
+    document.getElementById("afAB").textContent=ab.toFixed(2);
+    var st=document.getElementById("afStatus"),afEl=document.getElementById("afAf");
+    if(Math.abs(ab-1)<0.005){afEl.textContent="∞";st.innerHTML="<b>Aβ = 1</b>: පහළ කොටස බිංදුව. Gain එක අනන්තයි. Input නැතුවම output එකක්: <b>oscillator</b>.";}
+    else if(ab>1){afEl.textContent="(සෘණ අගයක්, තේරුමක් නෑ)";st.innerHTML="<b>Aβ &gt; 1</b>: සූත්‍රය දැන් වලංගු නෑ. Signal එක වටෙන් වට ලොකු වෙනවා (4 වෙනි කොටස). Circuit එක amplifier එකක් විදියට ස්ථාවර නෑ.";}
+    else{afEl.textContent=(A/(1-ab)).toFixed(1);st.innerHTML="<b>Aβ &lt; 1</b>: ස්ථාවර amplifier එකක්. Aβ 1 ට කිට්ටු වෙන්න වෙන්න Af ඉක්මනට ලොකු වෙනවා.";}
+    // plot Af/A = 1/(1-x) for x in [0,1.4]
+    var W=600,H=240,L=46,R=14,T=14,Bm=34,xmax=1.4,ymax=12;
+    function X(x){return L+(W-L-R)*x/xmax;} function Y(y){return H-Bm-(H-T-Bm)*Math.min(y,ymax)/ymax;}
+    var s="";
+    s+='<rect x="'+X(1)+'" y="'+T+'" width="'+(X(xmax)-X(1))+'" height="'+(H-T-Bm)+'" fill="#2a1712"/>';
+    s+='<text x="'+(X(1)+8)+'" y="'+(T+18)+'" font-size="12" fill="'+C.coral+'" font-family="Noto Sans Sinhala, sans-serif">Aβ &gt; 1: ලොකු වෙනවා</text>';
+    for(var gx=0;gx<=1.4001;gx+=0.2){s+='<line x1="'+X(gx)+'" x2="'+X(gx)+'" y1="'+T+'" y2="'+(H-Bm)+'" stroke="'+C.grid+'"/><text x="'+X(gx)+'" y="'+(H-Bm+16)+'" font-size="11" text-anchor="middle" fill="'+C.muted+'" font-family="JetBrains Mono, monospace">'+gx.toFixed(1)+'</text>';}
+    for(var gy=0;gy<=12;gy+=4){s+='<line x1="'+L+'" x2="'+(W-R)+'" y1="'+Y(gy)+'" y2="'+Y(gy)+'" stroke="'+C.grid+'"/><text x="'+(L-6)+'" y="'+(Y(gy)+4)+'" font-size="11" text-anchor="end" fill="'+C.muted+'" font-family="JetBrains Mono, monospace">'+gy+'</text>';}
+    s+='<line x1="'+X(1)+'" x2="'+X(1)+'" y1="'+T+'" y2="'+(H-Bm)+'" stroke="'+C.violet+'" stroke-dasharray="5 4"/>';
+    var d="";for(var i=0;i<=200;i++){var x=i/200*0.995;d+=(i?"L":"M")+X(x).toFixed(1)+" "+Y(1/(1-x)).toFixed(1);}
+    s+='<path d="'+d+'" fill="none" stroke="'+C.amber+'" stroke-width="2.2"/>';
+    s+='<text x="'+(W/2)+'" y="'+(H-4)+'" font-size="12" text-anchor="middle" fill="'+C.muted+'" font-family="JetBrains Mono, monospace">Aβ</text>';
+    s+='<text x="'+(L+6)+'" y="'+(T+14)+'" font-size="12" fill="'+C.muted+'" font-family="JetBrains Mono, monospace">Af/A</text>';
+    var mx=Math.min(ab,xmax),my=ab<1?1/(1-ab):ymax;
+    s+='<circle cx="'+X(mx)+'" cy="'+Y(my)+'" r="6" fill="'+(ab<0.995?C.amber:(ab<1.005?C.violet:C.coral))+'"/>';
+    plot.innerHTML=s;
+  }
+  afA.addEventListener("input",updAf);afB.addEventListener("input",updAf);
+
+  // widget: Barkhausen phase + magnitude
+  var bkM=document.getElementById("bkM"),bkP=document.getElementById("bkP"),bk=document.getElementById("bk");
+  function updBk(){
+    var m=Number(bkM.value),p=Number(bkP.value);
+    document.getElementById("bkMo").textContent=m.toFixed(2);
+    document.getElementById("bkPo").textContent=p+"°";
+    var f=fit(bk),ctx=f.ctx,w=f.w,h=f.h,mid=h/2,sc=h/2/1.7;
+    ctx.clearRect(0,0,w,h);grid(ctx,w,h);
+    function wave(col,amp,ph,dash){ctx.setLineDash(dash?[7,6]:[]);ctx.strokeStyle=col;ctx.lineWidth=2.2;ctx.beginPath();
+      for(var i=0;i<=400;i++){var u=i/400,y=amp*Math.sin(2*Math.PI*2.5*u-ph*Math.PI/180);if(i)ctx.lineTo(u*w,mid-y*sc);else ctx.moveTo(u*w,mid-y*sc);}ctx.stroke();ctx.setLineDash([]);}
+    wave(C.amber,1,0,false);wave(C.cyan,m,p,true);
+    var magOk=Math.abs(m-1)<=0.02,d=Math.min(p,360-p),phOk=d<=2;
+    var c1=document.getElementById("bkC1"),c2=document.getElementById("bkC2");
+    c1.className="chip "+(magOk?"ok":"bad");c2.className="chip "+(phOk?"ok":"bad");
+    var s;
+    if(magOk&&phOk) s="✓ කොන්දේසි දෙකම සපුරනවා. ආපහු එන wave එක දැන් තියෙන wave එකට හරියටම ගැලපෙනවා: <b>sustained oscillation</b>.";
+    else if(phOk) s="Phase හරි, ඒත් |Aβ| = "+m.toFixed(2)+". "+(m<1?"ආපහු එන wave එක පුංචියි, ටිකෙන් ටික මැකෙනවා.":"ආපහු එන wave එක ලොකුයි, වටෙන් වට ලොකු වෙලා clip වෙනවා.");
+    else if(magOk) s="ප්‍රමාණය හරි, ඒත් phase එක "+p+"°. Peaks එකට එන්නේ නෑ"+(d>=170?", ඇත්තටම එකිනෙක කපා හරිනවා.":", ඒ නිසා හරියට එකතු වෙන්නේ නෑ.");
+    else s="කොන්දේසි දෙකම වැරදියි. Phase slider එක 0° හෝ 360° ට, |Aβ| එක 1.00 ට ගෙනියන්න.";
+    document.getElementById("bkStatus").innerHTML=s;
+  }
+  bkM.addEventListener("input",updBk);bkP.addEventListener("input",updBk);
+
+  // side panel: highlight the section and subtopic being read
+  (function(){
+    var nav=document.querySelector("nav.map");if(!nav)return;
+    var items=[];
+    nav.querySelectorAll("ol > li > a").forEach(function(a){
+      var sec=document.getElementById(a.getAttribute("href").slice(1));if(!sec)return;
+      var ul=document.createElement("ul");ul.className="sub";ul.hidden=true;
+      var sItem={a:a,el:sec,ul:ul,subs:[]};items.push(sItem);
+      sec.querySelectorAll("h3").forEach(function(h,i){
+        if(!h.id)h.id=sec.id+"-"+(i+1);
+        var li=document.createElement("li"),sa=document.createElement("a");
+        sa.href="#"+h.id;sa.textContent=h.childNodes[0].textContent.trim();
+        li.appendChild(sa);ul.appendChild(li);sItem.subs.push({a:sa,el:h});
+      });
+      if(sItem.subs.length)a.parentNode.appendChild(ul);
+    });
+    var curS=null,curH=null,ticking=false;
+    function spy(){
+      ticking=false;var line=140,s=items[0],h=null;
+      items.forEach(function(it){if(it.el.getBoundingClientRect().top<=line)s=it;});
+      if(window.innerHeight+window.scrollY>=document.documentElement.scrollHeight-4)s=items[items.length-1];
+      s.subs.forEach(function(x){if(x.el.getBoundingClientRect().top<=line)h=x;});
+      if(s!==curS){items.forEach(function(it){var on=it===s;it.a.classList.toggle("active",on);it.ul.hidden=!on;if(on)it.a.setAttribute("aria-current","true");else it.a.removeAttribute("aria-current");});curS=s;}
+      if(h!==curH){items.forEach(function(it){it.subs.forEach(function(x){x.a.classList.toggle("active",x===h);});});curH=h;
+        var t=(h||s).a;var nr=nav.getBoundingClientRect(),tr=t.getBoundingClientRect();
+        if(tr.top<nr.top||tr.bottom>nr.bottom)nav.scrollTop+=tr.top-nr.top-nr.height/2;}
+    }
+    window.addEventListener("scroll",function(){if(!ticking){ticking=true;requestAnimationFrame(spy);}},{passive:true});
+    window.addEventListener("resize",spy);spy();
+  })();
+
+  function all(){drawMinis();updScope();updAf();updBk();}
+  all();
+  var rt;window.addEventListener("resize",function(){clearTimeout(rt);rt=setTimeout(all,120);});
+  if(document.fonts&&document.fonts.ready)document.fonts.ready.then(updAf);
+})();
+</script>
+
+<!-- site: link back to the lesson index -->
+<style>.homelink{position:fixed;left:16px;bottom:calc(env(safe-area-inset-bottom,0px) + 16px);z-index:20;display:flex;align-items:center;gap:6px;padding:8px 14px;border-radius:999px;background:#18212a;border:1px solid #3a4955;color:#dfe6ea;font:500 13px "Noto Sans Sinhala",system-ui,sans-serif;text-decoration:none;box-shadow:0 4px 18px rgba(0,0,0,.4)}.homelink:hover{border-color:#f1b34f;color:#f1b34f}@media print{.homelink{display:none}}</style>
+<a class="homelink" href="../index.html">← සියලු පාඩම්</a>
+</body>
+</html>
