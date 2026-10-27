@@ -6,7 +6,7 @@ Lecture slides වලින් හදපු සිංහල පාඩම් ට�
 
 ```
 index.html        මුල් පිටුව (පාඩම් ලැයිස්තුව)
-lessons/          පාඩම් HTML files 5
+lessons/          පාඩම් HTML files 3
 README.md         මේ file එක
 .nojekyll         GitHub Pages එකට files වෙනස් නොකර දාන්න කියන සලකුණ
 ```
